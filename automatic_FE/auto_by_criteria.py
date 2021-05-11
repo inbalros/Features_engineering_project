@@ -125,14 +125,15 @@ def create_new_features(features_unary,features_binary):
     for oper in operators_binary_direction_NOT_important:
         for f1 in features_binary:
             for f2 in features_binary:
-                new_col=prepare_new_feature(False,oper,f1,f2)
-                if len(dic_new_features[new_col][0].unique())>1:
-                    new_features_names.append(new_col)
+                if f1 != f2:
+                    new_col=prepare_new_feature(False,oper,f1,f2)
+                    if len(dic_new_features[new_col][0].unique())>1:
+                        new_features_names.append(new_col)
     for oper in operators_unary:
         for f1 in features_unary:
             new_col =prepare_new_feature(False,oper,f1,None)
             if len(dic_new_features[new_col][0].unique())> 1 :
-                new_features_names.append()
+                new_features_names.append(new_col)
 
 
 def multi_class_DT_pred(train,test,data, x_names,y_names):

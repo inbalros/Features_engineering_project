@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from automatic_FE.auto_by_criteria import *
 import sys
+import os
 
 dfAllPred= pd.DataFrame(
 columns=['dataset_name','number_of_features','number_of_classes','dataset_size','using_criterion',
@@ -9,13 +10,21 @@ columns=['dataset_name','number_of_features','number_of_classes','dataset_size',
          'number_of_folds','depth_max','number_of_trees_per_fold','number_of_rounds','delete_used_f', 'added_features','all_features',
          'accuracy_after', 'criteria_after','precision_after','recall_after','f_measure_after','roc_after','prc_after','n_leaves_after','max_depth_after','node_count_after'])
 
+print (os.path.dirname(os.path.abspath(__file__)))
+start_path=(os.path.dirname(os.path.abspath(__file__)))
+one_back= os.path.dirname(start_path)
+
 dataset_name= str(sys.argv[1])
-result_path = r"..\results\results_"+dataset_name+".txt"
+
+result_path=os.path.join(one_back,  r"results\results_"+dataset_name+".txt")
+
+
+#result_path = r"..\results\results_"+dataset_name+".txt"
 
 index = 1
 def write_to_excel():
     global index
-    writerResults = pd.ExcelWriter(r"..\results\results_"+dataset_name+"_"+str(index)+".xlsx")
+    writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results\results_"+dataset_name+"_"+str(index)+".xlsx"))
     index+=1
     dfAllPred.to_excel(writerResults,'results')
     writerResults.save()
@@ -52,7 +61,7 @@ all_criterions={'max_depth': criteria_max_depth ,'number_of_leaves':criteria_num
 
 if(dataset_name=='magic'):
     print(dataset_name)
-    data_path = r'..\Data\magic04\magic.csv'
+    data_path = os.path.join(one_back,r'Data\magic04\magic.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 12)])
     X_names_ds = ["att" + str(i) for i in range(1, 11)]
     y_names = "att11"
@@ -69,7 +78,7 @@ if(dataset_name=='magic'):
 
 elif(dataset_name=="skin_nonSkin"):
     print(dataset_name)
-    data_path = r'..\Data\skin_NonSkin\skin_NoSkin.csv'
+    data_path =os.path.join(one_back, r'Data\skin_NonSkin\skin_NoSkin.csv')
     choosen_data = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,5)])
     #choosen_data = choosen_data[:100]
     X_names_ds = ["att" + str(i) for i in range(1, 4)]
@@ -87,7 +96,7 @@ elif(dataset_name=="skin_nonSkin"):
 
 elif(dataset_name=="cars"):
     print(dataset_name)
-    data_path = r'..\Data\car\car.csv'
+    data_path = os.path.join(one_back,r'Data\car\car.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 8)])
     X_names_ds = ["att" + str(i) for i in range(1, 7)]
     y_names = "att7"
@@ -104,7 +113,7 @@ elif(dataset_name=="cars"):
 
 elif(dataset_name=="abalone"):
     print(dataset_name)
-    data_path = r'..\Data\abalone\abalone.csv'
+    data_path = os.path.join(one_back,r'Data\abalone\abalone.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 10)])
     X_names_ds = ["att" + str(i) for i in range(1, 9)]
     y_names = "att9"
@@ -121,7 +130,7 @@ elif(dataset_name=="abalone"):
 
 elif(dataset_name=="bank"):
     print(dataset_name)
-    data_path = r'..\Data\bank\bank.csv'
+    data_path = os.path.join(one_back,r'Data\bank\bank.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 18)])
     X_names_ds = ["att" + str(i) for i in range(1, 17)]
     y_names = "att17"
@@ -138,7 +147,7 @@ elif(dataset_name=="bank"):
 
 elif(dataset_name=="wine"):
     print(dataset_name)
-    data_path = r'..\Data\wine\winequality-white.csv'
+    data_path = os.path.join(one_back,r'Data\wine\winequality-white.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 13)])
     X_names_ds = ["att" + str(i) for i in range(1, 12)]
     y_names = "att12"
@@ -155,7 +164,7 @@ elif(dataset_name=="wine"):
 
 elif(dataset_name=="blood"):
     print(dataset_name)
-    data_path = r'..\Data\blood_transfusion\blood.csv'
+    data_path = os.path.join(one_back,r'Data\blood_transfusion\blood.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 6)])
     X_names_ds = ["att" + str(i) for i in range(1, 5)]
     y_names = "att5"
@@ -172,7 +181,7 @@ elif(dataset_name=="blood"):
 
 elif(dataset_name=="wifi"):
     print(dataset_name)
-    data_path = r'..\Data\wifi\wifi.csv'
+    data_path = os.path.join(one_back,r'Data\wifi\wifi.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 9)])
     X_names_ds = ["att" + str(i) for i in range(1, 8)]
     y_names = "att8"
@@ -189,7 +198,7 @@ elif(dataset_name=="wifi"):
 
 elif(dataset_name=="chess"):
     print(dataset_name)
-    data_path = r'..\Data\chess\chess.csv'
+    data_path = os.path.join(one_back,r'Data\chess\chess.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 8)])
     X_names_ds = ["att" + str(i) for i in range(1, 7)]
     y_names = "att7"
@@ -206,7 +215,7 @@ elif(dataset_name=="chess"):
 
 elif(dataset_name=="letters"):
     print(dataset_name)
-    data_path = r'..\Data\letter_recognition\letter_recognition.csv'
+    data_path = os.path.join(one_back,r'Data\letter_recognition\letter_recognition.csv')
     choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 18)])
     X_names_ds = ["att" + str(i) for i in range(1, 17)]
     y_names = "att17"

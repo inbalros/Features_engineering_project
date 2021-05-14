@@ -5,8 +5,9 @@ import sys
 
 dfAllPred= pd.DataFrame(
 columns=['dataset_name','number_of_features','number_of_classes','dataset_size','using_criterion',
-         'Accuracy_base', 'Criteria_base','number_of_folds','number_of_trees_per_fold','number_of_rounds','delete_used_f', 'added_features',
-         'accuracy_after', 'criteria_after'])
+         'accuracy_base', 'criteria_base','precision_base','recall_base','f_measure_base','roc_base','prc_base','n_leaves_base','max_depth_base','node_count_base',
+         'number_of_folds','depth_max','number_of_trees_per_fold','number_of_rounds','delete_used_f', 'added_features','all_features',
+         'accuracy_after', 'criteria_after','precision_after','recall_after','f_measure_after','roc_after','prc_after','n_leaves_after','max_depth_after','node_count_after'])
 
 dataset_name= str(sys.argv[1])
 result_path = r"..\results\results_"+dataset_name+".txt"
@@ -44,7 +45,7 @@ def criteria_number_of_nodes(tree):
 ###############################
 
 number_of_kFolds = 5
-number_of_trees_per_fold = 5
+number_of_trees_per_fold = 10
 depth = None  ###################################### add as parameter
 all_criterions={'max_depth': criteria_max_depth ,'number_of_leaves':criteria_number_of_leaves,'number_of_nodes':criteria_number_of_nodes}
 
@@ -227,11 +228,17 @@ else:
 
 for delete_used_f in [True,False]:
     for criterion_name, criterion_function in all_criterions.items():
-        for cur_depth in [None,5,6,10,15]:
-            base_acu_test, base_criterion, rounds, added_f_names, acu_test, criterion_cur = \
+        for cur_depth in [None,1,2,3,4,5,10,15,20]:
+            before_acu_test, before_criterion, rounds, added_f_names, acu_test, criterion_after ,precision_before, recall_before, f_measure_before, roc_before, prc_before, n_leaves_before, max_depth_before, node_count_before, precision_after, recall_after, f_measure_after, roc_after, prc_after, n_leaves_after, max_depth_after, node_count_after, last_x_name =\
                 auto_F_E(number_of_kFolds,number_of_trees_per_fold,data,X_names_ds,y_names,features_unary,features_binary,cur_depth,result_path,criterion_function,delete_used_f)
 
-            dfAllPred.loc[len(dfAllPred)] = np.array([db_name,str(f_number),str(un_class),str(data.shape[0]),criterion_name,str(base_acu_test), base_criterion,str(number_of_kFolds),str(number_of_trees_per_fold),str(rounds),str(delete_used_f),str(added_f_names),str(acu_test),str(criterion_cur)])
+            dfAllPred.loc[len(dfAllPred)] = np.array([db_name,str(f_number),str(un_class),str(data.shape[0]),criterion_name,str(before_acu_test), before_criterion,
+                                                      str(precision_before),str(recall_before),str(f_measure_before),str(roc_before),str(prc_before),str(n_leaves_before),str(max_depth_before),str(node_count_before),
+                                                      str(number_of_kFolds),str(cur_depth),str(number_of_trees_per_fold),str(rounds),str(delete_used_f),str(added_f_names),
+                                                      str(last_x_name),str(acu_test),str(criterion_after),
+                                                      str(precision_after), str(recall_after), str(f_measure_after),
+                                                      str(roc_after), str(prc_after), str(n_leaves_after),
+                                                      str(max_depth_after), str(node_count_after)])
             write_to_excel()
 
 

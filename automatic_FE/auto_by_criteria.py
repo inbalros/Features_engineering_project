@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestClassifier
 import time
 from sklearn import metrics
 from sklearn import tree
+from sklearn.metrics import classification_report, confusion_matrix
 
 
 #############################
@@ -17,7 +18,8 @@ from sklearn import tree
 
 #db_name = r'D:\phd\DB\Diabetes.csv'
 
-
+import warnings
+warnings.filterwarnings('ignore')
 
 def normalize_results(pred,index,dataset_name,method,number_of_classes,cluster_number,dataset_size,using_model):
     pred /= index
@@ -170,8 +172,8 @@ def predict_kfold(data, x_names,y_names,criteria_Function,f_name=None,number_of_
 
     #results_all_multi_class_DT_pred = normalize_results(all_multi_class_DT_pred,index,name,"decision_tree",number_of_classes,"-",size,"decision_tree")
     all_DT_pred /= index
-    pred_list = all_DT_pred.tolist()
-    return pred_list,clf
+    all_pred_measures_list = all_DT_pred.tolist()
+    return all_pred_measures_list,clf
     #dfAllPred.loc[len(dfAllPred)] = results_all_multi_class_DT_pred
 
 
@@ -186,7 +188,7 @@ def all_words_in_string(string):
 def find_X_from_RF(train,test,data, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,depth=None):
     start_time = time.time()
     if depth == None:
-        central_clf = RandomForestClassifier(n_estimators=number_of_trees*3,random_state=None)\
+        central_clf = RandomForestClassifier(n_estimators=number_of_trees * 3,random_state=None)\
             .fit(data.iloc[train][x_names],np.array(data.iloc[train][y_names]))
     else:
         central_clf = RandomForestClassifier(n_estimators=number_of_trees * 3,max_depth=depth,random_state=None)\
@@ -210,25 +212,80 @@ def find_X_from_RF(train,test,data, x_names,y_names,criteria_Function,f_name=Non
             index_trees += 1
 
     pred_acc=0
+    precision_all=0
+    recall_all=0
+    f_measure_all=0
+    roc_all=0
+    prc_all=0
     criterion_trees=0
-    for cur_tree in correct_trees:
-        start_time = time.time()
-        prediction = cur_tree.predict(data.iloc[test][x_names])  # the predictions labels
-        end_time = time.time()
-        pred_time = end_time - start_time
-        acu_test = metrics.accuracy_score(pd.Series.tolist(data.iloc[test][y_names]), prediction)
-        pred_acc += acu_test
-        criterion_trees += criteria_Function(cur_tree)
+    #confusion_all=0
+
+    n_leaves_all =0
+    max_depth_all=0
+    node_count_all=0
 
     if index_trees != number_of_trees:          ####check this####
         global criterion_base
         pred_acc =0
         criterion_trees = criterion_base
     else:
+        for cur_tree in correct_trees:
+            start_time = time.time()
+            prediction = cur_tree.predict(data.iloc[test][x_names])  # the predictions labels
+            end_time = time.time()
+            pred_time = end_time - start_time
+            acu_test = metrics.accuracy_score(pd.Series.tolist(data.iloc[test][y_names]), prediction)
+            pred_acc += acu_test
+            #confusion_all += confusion_matrix(pd.Series.tolist(data.iloc[test][y_names]), prediction)
+            y_true = pd.Series.tolist(data.iloc[test][y_names])
+            y_pred = list(prediction)
+            un_true, _ = np.unique(y_true, return_counts=True)
+            un_pred, _ = np.unique(y_pred, return_counts=True)
+            if len(un_true) == 1 or len(un_pred) == 1:
+                y_true.append(0)
+                y_true.append(1)
+                y_pred.append(0)
+                y_pred.append(1)
+                y_true.append(0)
+                y_true.append(1)
+                y_pred.append(1)
+                y_pred.append(0)
+                #print("zero or ones")
+            criterion_trees += criteria_Function(cur_tree)
+            precision_all += metrics.precision_score(y_true, y_pred,average='weighted')
+            recall_all += metrics.recall_score(y_true, y_pred,average='weighted')
+            f_measure_all += metrics.f1_score(y_true, y_pred,average='weighted')
+            try:
+                roc_all += metrics.roc_auc_score(y_true, y_pred)
+            except:
+                #print("exception_roc")
+                roc_all +=  0
+            try:
+                precision_prc, recall_prc, thresholds_prc = metrics.precision_recall_curve(y_true, y_pred)
+                prc_all += metrics.auc(recall_prc, precision_prc)
+            except:
+                #print("exception_prc - N")
+                prc_all += 1
+
+            ############## All the criterion options on cur_tree:
+            n_leaves_all += cur_tree.tree_.n_leaves
+            max_depth_all += cur_tree.tree_.max_depth
+            node_count_all += cur_tree.tree_.node_count
+
+
         pred_acc /= index_trees
+        #confusion_all = confusion_all/index_trees
+        precision_all/= index_trees
+        recall_all/= index_trees
+        f_measure_all/= index_trees
+        roc_all/= index_trees
+        prc_all/= index_trees
+        n_leaves_all /= index_trees
+        max_depth_all/= index_trees
+        node_count_all/= index_trees
         criterion_trees /= index_trees
 
-    return (np.array(list((pred_acc, criterion_trees))), correct_trees)
+    return (np.array(list((pred_acc, criterion_trees,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all))), correct_trees)
 
 
 def choose_best_feature(base_acu_test,base_criterion,criteria_Function,depth=None,number_of_kFolds=5,number_of_trees_per_fold=5,delete_used_f=False):
@@ -252,10 +309,10 @@ def choose_best_feature(base_acu_test,base_criterion,criteria_Function,depth=Non
             new_acu_test = new_pred[0]
             new_criterion = new_pred[1]
             if new_acu_test > (base_acu_test-0.03) and new_criterion < base_criterion:
-                best_critrion[name] = (new_acu_test,new_criterion,clf)
+                best_critrion[name] = new_pred
 
     if len(best_critrion)==0:
-        return None,(None,None,None)
+        return None,(None, None, None, None, None, None, None,None, None, None)
     #min(value[1] for key,value in best_critrion.items())
     best_f = list(filter(None,[(key1,value1) if value1[1]==(min(value[1] for key,value in best_critrion.items())) else None for key1,value1 in best_critrion.items()]))[0]
     data.loc[:, best_f[0]] = dic_new_features[best_f[0]][0]
@@ -270,7 +327,7 @@ def choose_best_feature(base_acu_test,base_criterion,criteria_Function,depth=Non
 
 
 def auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_names_cur,features_unary,features_binary,depth,result_path,criteria_Function,delete_used_f=False):
-    print(str(delete_used_f))
+    #print(str(delete_used_f))
     global new_features_names
     global data
     global X_names
@@ -282,18 +339,32 @@ def auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_na
     added_f_names = []
     data = data_cur
     X_names =X_names_cur.copy()
-    print(X_names)
+    #print(X_names)
     y_names=y_names_cur
-    base_pred,clf_list_base = \
+   # base_pred,clf_list_base = \
+    (base_acu_test, base_criterion, precision_base, recall_base, f_measure_base, roc_base, prc_base,
+         n_leaves_base, max_depth_base, node_count_base),clf = \
         predict_kfold(data, X_names, y_names,criteria_Function,None,number_of_trees_per_fold,number_of_kFolds,depth)
-    base_acu_test = base_pred[0]
-    base_criterion = base_pred[1]
+    #base_acu_test = base_pred[0]
+    #base_criterion = base_pred[1]
 
     global criterion_base
     criterion_base = base_criterion
 
-    print(base_acu_test)
-    print(base_criterion)
+    acu_test=0
+    criterion_cur=0
+
+    precision_last=0
+    recall_last=0
+    f_measure_last=0
+    roc_last=0
+    prc_last=0
+    n_leaves_last=0
+    max_depth_last=0
+    node_count_last=0
+
+    #print(base_acu_test)
+    #print(base_criterion)
     acu_test = base_acu_test
     criterion_cur = base_criterion
     last_acu_test=base_acu_test
@@ -304,14 +375,18 @@ def auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_na
     f.write(str(base_criterion)+" \n")
     rounds = 0
     last_criterion_cur=-1
-    for num in range (5):
+    for num in range (10):
         create_new_features(features_unary,features_binary)
         new_features_names = list(dict.fromkeys(new_features_names))
-        print(new_features_names)
+        #print(new_features_names)
         f.write("all new f: "+ str(new_features_names) + " \n")
         new_acc = max(base_acu_test,acu_test)  ######## what do you think about this?
-        new_f_name,(acu_test,criterion_cur,clf) = choose_best_feature(new_acc,criterion_cur,criteria_Function,depth,number_of_kFolds,number_of_trees_per_fold,delete_used_f)
-        print(X_names)
+        new_f_name,(acu_test, criterion_cur, precision_cur, recall_cur, f_measure_cur, roc_cur, prc_cur,
+                              n_leaves_cur, max_depth_cur, node_count_cur) = choose_best_feature(new_acc,criterion_cur,criteria_Function,depth,number_of_kFolds,number_of_trees_per_fold,delete_used_f)
+#        return (np.array(list((pred_acc, criterion_trees, precision_all, recall_all, f_measure_all, roc_all, prc_all,
+#                              n_leaves_all, max_depth_all, node_count_all))), correct_trees)
+
+        #print(X_names)
         f.write("X_names "+ str(X_names) + " \n")
         if new_f_name == None:
             break
@@ -321,17 +396,27 @@ def auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_na
             pass
         #features_binary.append(new_f_name)
         features_binary = X_names.copy()
-        print(added_f_names)
+        #print(added_f_names)
         f.write("added: "+ str(added_f_names)+" \n")
-        print(acu_test)
-        print(criterion_cur)
+        #print(acu_test)
+        #print(criterion_cur)
         last_acu_test = acu_test
         last_criterion_cur = criterion_cur
+
+        precision_last=precision_cur
+        recall_last=recall_cur
+        f_measure_last=f_measure_cur
+        roc_last =roc_cur
+        prc_last =prc_cur
+        n_leaves_last =n_leaves_cur
+        max_depth_last =max_depth_cur
+        node_count_last =node_count_cur
+
         f.write(str(acu_test)+" \n")
         f.write(str(criterion_cur)+" \n")
     f.close()
 
-    return base_acu_test,base_criterion,rounds,added_f_names,last_acu_test,last_criterion_cur
+    return base_acu_test,base_criterion,rounds,added_f_names,last_acu_test,last_criterion_cur, precision_base, recall_base, f_measure_base, roc_base, prc_base,n_leaves_base, max_depth_base, node_count_base,precision_last, recall_last, f_measure_last, roc_last, prc_last,n_leaves_last, max_depth_last, node_count_last,X_names
 
 dic_new_features={}
 new_features_names = []
@@ -342,9 +427,9 @@ y_names = None
 criterion_base = 0
 
 operators_binary_direction_important= [minus,divide]
-# operators_binary_direction_important= []
+#operators_binary_direction_important= []
 operators_binary_direction_NOT_important= [multiplication,plus]
-# operators_binary_direction_NOT_important= [plus]
+#operators_binary_direction_NOT_important= [plus]
 operators_unary=[]
 
 # for key, value in my_dict.items():

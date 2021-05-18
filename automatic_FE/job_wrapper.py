@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 from automatic_FE.auto_by_criteria import *
+from automatic_FE.importances_features import *
+
 import sys
 import os
 
@@ -9,6 +11,7 @@ columns=['dataset_name','number_of_features','number_of_classes','dataset_size',
          'accuracy_base', 'criteria_base','precision_base','recall_base','f_measure_base','roc_base','prc_base','n_leaves_base','max_depth_base','node_count_base',
          'number_of_folds','depth_max','number_of_trees_per_fold','number_of_rounds','delete_used_f', 'added_features','all_features',
          'accuracy_after', 'criteria_after','precision_after','recall_after','f_measure_after','roc_after','prc_after','n_leaves_after','max_depth_after','node_count_after'])
+
 
 print (os.path.dirname(os.path.abspath(__file__)))
 start_path=(os.path.dirname(os.path.abspath(__file__)))
@@ -21,11 +24,11 @@ result_path=os.path.join(one_back,  r"results\results_"+dataset_name+".txt")
 
 #result_path = r"..\results\results_"+dataset_name+".txt"
 
-index = 1
-def write_to_excel():
-    global index
-    writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results\results_"+dataset_name+"_"+str(index)+".xlsx"))
-    index+=1
+index1 = 1
+def write_to_excel_dfAllPred():
+    global index1
+    writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results\results_all_"+dataset_name+"_"+str(index1)+".xlsx"))
+    index1+=1
     dfAllPred.to_excel(writerResults,'results')
     writerResults.save()
 
@@ -248,8 +251,9 @@ for delete_used_f in [True,False]:
                                                       str(precision_after), str(recall_after), str(f_measure_after),
                                                       str(roc_after), str(prc_after), str(n_leaves_after),
                                                       str(max_depth_after), str(node_count_after)])
-            write_to_excel()
+            write_to_excel_dfAllPred()
 
+            importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data,last_x_name,X_names_ds,y_names,50,criterion_function)
 
 
 

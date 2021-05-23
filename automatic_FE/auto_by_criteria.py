@@ -416,7 +416,7 @@ def auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_na
         f.write(str(criterion_cur)+" \n")
     f.close()
 
-    return base_acu_test,base_criterion,rounds,added_f_names,last_acu_test,last_criterion_cur, precision_base, recall_base, f_measure_base, roc_base, prc_base,n_leaves_base, max_depth_base, node_count_base,precision_last, recall_last, f_measure_last, roc_last, prc_last,n_leaves_last, max_depth_last, node_count_last,X_names
+    return base_acu_test,base_criterion,rounds,added_f_names,last_acu_test,last_criterion_cur, precision_base, recall_base, f_measure_base, roc_base, prc_base,n_leaves_base, max_depth_base, node_count_base,precision_last, recall_last, f_measure_last, roc_last, prc_last,n_leaves_last, max_depth_last, node_count_last,X_names,data.copy()
 
 dic_new_features={}
 new_features_names = []

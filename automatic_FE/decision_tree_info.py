@@ -9,12 +9,14 @@ import time
 from sklearn import metrics
 from sklearn import tree
 from automatic_FE.auto_by_criteria import *
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.inspection import permutation_importance
+
 
 
 print("start - magic04")
 #2) data set = magic04 https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
-gan_path = r'C:\Users\USER\Documents\machineLearning\Assignment3\GanDataSampling\magic04\magic_syn.csv'
-data_path = r'C:\Users\USER\Documents\machineLearning\Assignment3\GanDataSampling\magic04\magic.csv'
+data_path = r'..\\Data\\magic04\\magic.csv'
 magic = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,12)])
 X_names_ds = ["att"+str(i) for i in range(1,11)]
 y_names = "att11"
@@ -35,23 +37,64 @@ def Sort_Tuple(tup):
     # reverse = None (Sorts in Ascending order)
     # key is set to sort using second element of
     # sublist lambda has been used
-    return (sorted(tup, key=lambda x: x[0]))
+    return (sorted(tup, key=lambda x: x[0],reverse=True ))
+
+import matplotlib.pyplot as plt
+
+def create_permutation_importance(rf,X_test,y_test):
+    result = permutation_importance(rf, X_test, y_test, n_repeats=10,
+                                    random_state=42, n_jobs=2)
+    sorted_idx = result.importances_mean.argsort()[::-1][:len(result.importances_mean)]
+
+    permutation_importance_list = list(((imp, name)) for name, imp in zip(X_test.columns[sorted_idx], result.importances_mean[sorted_idx].T))
+
+    fig, ax = plt.subplots()
+    ax.boxplot(result.importances[sorted_idx].T,
+               vert=False, labels=X_test.columns[sorted_idx])
+    ax.set_title("Permutation Importances (test set)")
+    fig.tight_layout()
+    plt.show()
+    print(permutation_importance_list)
+    return permutation_importance_list
+
+def create_impurity_based_importance(rf,X_names):
+    imp_impurity_list = list(((imp, name)) for name, imp in zip(X_names, rf.feature_importances_))
+    new_imp_impurity_list = sorted(imp_impurity_list, key=lambda x: x[0],reverse=True )
+    print(new_imp_impurity_list)
+    return new_imp_impurity_list
+
 
 kfold = KFold(3)
 index = 0
 size = data.shape[0]
 all_DT_pred = 0
 print("gry")
+con=0
 for train, test in kfold.split(data):
     index += 1
+
     central_clf = RandomForestClassifier(n_estimators=10, random_state=None) \
     .fit(data.iloc[train][X_names_ds], np.array(data.iloc[train][y_names]))
+
+
+    create_permutation_importance(central_clf, data.iloc[train][X_names_ds],  np.array(data.iloc[train][y_names]))
+
+    create_impurity_based_importance(central_clf, X_names_ds)
+
+
+    #prediction = central_clf.predict(data.iloc[test][X_names_ds])  # the predictions labels
+
+
+
+
+
+    #con+=confusion_matrix(pd.Series.tolist(data.iloc[test][y_names]),prediction)
     #tree_info = (tree.plot_tree(central_clf.estimators_[0]))
     #a = 4
+
+#con = con/index
 print(central_clf.feature_importances_)
-imp_list = list(((imp,"att"+str(index+1)) for index, imp in enumerate(central_clf.feature_importances_)))
-print(imp_list)
-print(Sort_Tuple(imp_list))
+
 #central_clf.feature_importances_
 #central_clf.estimators_
 

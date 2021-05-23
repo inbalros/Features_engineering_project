@@ -19,7 +19,7 @@ one_back= os.path.dirname(start_path)
 
 dataset_name= str(sys.argv[1])
 
-result_path=os.path.join(one_back,  r"results\results_"+dataset_name+".txt")
+result_path=os.path.join(one_back,  r"results_1\results_"+dataset_name+".txt")
 
 
 #result_path = r"..\results\results_"+dataset_name+".txt"
@@ -27,7 +27,7 @@ result_path=os.path.join(one_back,  r"results\results_"+dataset_name+".txt")
 index1 = 1
 def write_to_excel_dfAllPred():
     global index1
-    writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results\results_all_"+dataset_name+"_"+str(index1)+".xlsx"))
+    writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results_1\results_all_"+dataset_name+"_"+str(index1)+".xlsx"))
     index1+=1
     dfAllPred.to_excel(writerResults,'results')
     writerResults.save()
@@ -56,7 +56,7 @@ def criteria_number_of_nodes(tree):
 #                             #
 ###############################
 
-number_of_kFolds = 5
+number_of_kFolds = 10
 number_of_trees_per_fold = 10
 depth = None  ###################################### add as parameter
 all_criterions={'max_depth': criteria_max_depth ,'number_of_leaves':criteria_number_of_leaves,'number_of_nodes':criteria_number_of_nodes}
@@ -73,11 +73,11 @@ if(dataset_name=='magic'):
     print(un_class)
     db_name = 'magic'
     f_number = 10
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 11)]
     label = "att11"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="skin_nonSkin"):
     print(dataset_name)
@@ -91,11 +91,11 @@ elif(dataset_name=="skin_nonSkin"):
     print(un_class)
     db_name = 'skin_nonSkin'
     f_number = 3
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 4)]
     label = "att4"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="cars"):
     print(dataset_name)
@@ -108,11 +108,11 @@ elif(dataset_name=="cars"):
     print(un_class)
     db_name = 'cars'
     f_number = 6
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 7)]
     label = "att7"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="abalone"):
     print(dataset_name)
@@ -125,11 +125,11 @@ elif(dataset_name=="abalone"):
     print(un_class)
     db_name = 'abalone'
     f_number = 8
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 9)]
     label = "att9"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="bank"):
     print(dataset_name)
@@ -142,11 +142,11 @@ elif(dataset_name=="bank"):
     print(un_class)
     db_name = 'bank'
     f_number = 16
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 17)]
     label = "att17"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="wine"):
     print(dataset_name)
@@ -159,11 +159,11 @@ elif(dataset_name=="wine"):
     print(un_class)
     db_name = 'wine'
     f_number = 11
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 12)]
     label = "att12"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="blood"):
     print(dataset_name)
@@ -176,11 +176,11 @@ elif(dataset_name=="blood"):
     print(un_class)
     db_name = 'blood'
     f_number = 4
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 5)]
     label = "att5"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="wifi"):
     print(dataset_name)
@@ -193,11 +193,11 @@ elif(dataset_name=="wifi"):
     print(un_class)
     db_name = 'wifi'
     f_number = 7
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 8)]
     label = "att8"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="chess"):
     print(dataset_name)
@@ -210,11 +210,11 @@ elif(dataset_name=="chess"):
     print(un_class)
     db_name = 'chess'
     f_number = 6
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 7)]
     label = "att7"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="letters"):
     print(dataset_name)
@@ -227,11 +227,11 @@ elif(dataset_name=="letters"):
     print(un_class)
     db_name = 'letters'
     f_number = 16
-    data = choosen_data[X_names_ds].copy()
+    data_chosen = choosen_data[X_names_ds].copy()
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 17)]
     label = "att17"
-    data[label] = choosen_data[label]
+    data_chosen[label] = choosen_data[label]
 
 else:
     exit(0)
@@ -240,11 +240,11 @@ else:
 
 for delete_used_f in [True,False]:
     for criterion_name, criterion_function in all_criterions.items():
-        for cur_depth in [None,1,2,3,4,5,10,15,20]:
-            before_acu_test, before_criterion, rounds, added_f_names, acu_test, criterion_after ,precision_before, recall_before, f_measure_before, roc_before, prc_before, n_leaves_before, max_depth_before, node_count_before, precision_after, recall_after, f_measure_after, roc_after, prc_after, n_leaves_after, max_depth_after, node_count_after, last_x_name =\
-                auto_F_E(number_of_kFolds,number_of_trees_per_fold,data,X_names_ds,y_names,features_unary,features_binary,cur_depth,result_path,criterion_function,delete_used_f)
+        for cur_depth in [None,1,2,3,5,10,15,20,25]:
+            before_acu_test, before_criterion, rounds, added_f_names, acu_test, criterion_after ,precision_before, recall_before, f_measure_before, roc_before, prc_before, n_leaves_before, max_depth_before, node_count_before, precision_after, recall_after, f_measure_after, roc_after, prc_after, n_leaves_after, max_depth_after, node_count_after, last_x_name, new_ds =\
+                auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_chosen.copy(),X_names_ds,y_names,features_unary,features_binary,cur_depth,result_path,criterion_function,delete_used_f)
 
-            dfAllPred.loc[len(dfAllPred)] = np.array([db_name,str(f_number),str(un_class),str(data.shape[0]),criterion_name,str(before_acu_test), before_criterion,
+            dfAllPred.loc[len(dfAllPred)] = np.array([db_name,str(f_number),str(un_class),str(data_chosen.shape[0]),criterion_name,str(before_acu_test), before_criterion,
                                                       str(precision_before),str(recall_before),str(f_measure_before),str(roc_before),str(prc_before),str(n_leaves_before),str(max_depth_before),str(node_count_before),
                                                       str(number_of_kFolds),str(cur_depth),str(number_of_trees_per_fold),str(rounds),str(delete_used_f),str(added_f_names),
                                                       str(last_x_name),str(acu_test),str(criterion_after),
@@ -253,7 +253,8 @@ for delete_used_f in [True,False]:
                                                       str(max_depth_after), str(node_count_after)])
             write_to_excel_dfAllPred()
 
-            importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data,last_x_name,X_names_ds,y_names,50,criterion_function)
+            if rounds>0:
+                importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data_chosen,new_ds,added_f_names,last_x_name,X_names_ds,y_names,100,criterion_function)
 
 
 

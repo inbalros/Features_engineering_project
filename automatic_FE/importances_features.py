@@ -1,9 +1,17 @@
 
-from automatic_FE.auto_by_criteria import *
+#from automatic_FE.auto_by_criteria import *
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.inspection import permutation_importance
 from sklearn.model_selection import train_test_split
-
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import KFold
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
+import time
+from sklearn import metrics
+from sklearn import tree
 import sys
 import os
 
@@ -34,7 +42,7 @@ def write_to_excel_df_importance_experiment():
 
 def create_permutation_importance(rf,X_test,y_test):
     result = permutation_importance(rf, X_test, y_test, n_repeats=10,
-                                    random_state=42, n_jobs=2)
+                                    random_state=None, n_jobs=2)
     sorted_idx = result.importances_mean.argsort()[::-1][:len(result.importances_mean)]
 
     permutation_importance_list = list(((imp, name)) for name, imp in zip(X_test.columns[sorted_idx], result.importances_mean[sorted_idx].T))

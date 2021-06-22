@@ -73,7 +73,6 @@ def predict_kfold_old(name,data, x_names,y_names,number_of_classes,paramK=5):
 
     #dfAllPred.loc[len(dfAllPred)] = results_all_multi_class_DT_pred
 
-
 ##
 def remove_duplicates(my_list):
   return list(dict.fromkeys(my_list))

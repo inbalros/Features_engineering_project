@@ -1,0 +1,57 @@
+(inbal_env) [inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ conda deactivate
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ clear
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ sbatch sbatch_cpu.example
+Submitted batch job 318839
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ squeue
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+            318824      main MaxSatAn twittoy@ PD       0:00      1 (Dependency)
+    318823_[1-100]      main MaxSatSo twittoy@ PD       0:00      1 (DependencyNeverSatisfied)
+            313199      main   my_job roypoli@  R 2-01:28:26      1 cs-cpu-02
+            318838      main  average noycohe@  R    1:02:43      1 ise-cpu-03
+            318712      main fraud-no chendoy@  R    4:47:55      1 cs-cpu-07
+            318708      main fraud-no chendoy@  R    4:47:58      1 cs-cpu-09
+            318709      main fraud-no chendoy@  R    4:47:58      1 cs-cpu-09
+            318710      main fraud-no chendoy@  R    4:47:58      1 cs-cpu-07
+            318711      main fraud-no chendoy@  R    4:47:58      1 cs-cpu-07
+            318707      main fraud-no chendoy@  R    4:48:01      1 cs-cpu-09
+            200135      main notebook efratrav  R 6-08:31:42      1 cs-cpu-03
+            318839      main inbal_jo inbalros  R       0:22      1 ise-cpu-03
+            316237      main enspire_ orella@a  R   23:40:39      1 cs-cpu-10
+            316236      main enspire_ orella@a  R   23:40:43      1 cs-cpu-10
+            316235      main  mc_pong chuchem@  R 1-01:16:16      1 cs-cpu-11
+            316233      main pycharm_ shanisa@  R 1-08:21:27      1 cs-cpu-11
+            286200      main   JobJob sipper@a  R 1-15:29:29      1 ise-cpu-07
+            286188      main   JobJob sipper@a  R 1-18:03:52      1 ise-cpu-07
+            286178      main   JobJob sipper@a  R 1-19:23:48      1 ise-cpu-07
+            286177      main   JobJob sipper@a  R 1-19:30:55      1 ise-cpu-07
+            286174      main   JobJob sipper@a  R 1-20:08:01      1 ise-cpu-01
+            286172      main   JobJob sipper@a  R 1-20:48:43      1 ise-cpu-01
+            286166      main   JobJob sipper@a  R 1-21:58:07      1 ise-cpu-03
+            286164      main   JobJob sipper@a  R 1-22:27:41      1 ise-cpu-03
+            286159      main   JobJob sipper@a  R 1-23:40:08      1 ise-cpu-03
+            286158      main   JobJob sipper@a  R 1-23:44:08      1 ise-cpu-03
+            286157      main   JobJob sipper@a  R 1-23:49:50      1 ise-cpu-03
+            286028      main enspire_ orella@a  R 2-21:56:34      1 cs-cpu-19
+            286027      main enspire_ orella@a  R 2-21:57:06      1 cs-cpu-25
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ squeue --user inbalros
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+            318839      main inbal_jo inbalros  R       0:40      1 ise-cpu-03
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ cat job-318839.out
+Tue May 4 18:58:18 IDT 2021
+
+SLURM_JOBID:             318839
+SLURM_JOB_NODELIST:      ise-cpu-03
+
+
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ squeue --user inbalros
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+            318839      main inbal_jo inbalros  R       2:53      1 ise-cpu-03
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ sbatch sbatch_cpu.example
+Submitted batch job 318840
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ squeue --user inbalros
+             JOBID PARTITION     NAME     USER ST       TIME  NODES NODELIST(REASON)
+            318839      main inbal_jo inbalros  R       3:35      1 ise-cpu-03
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$ sbatch sbatch_cpu.example
+Submitted batch job 318841
+[inbalros@auth.ad.bgu.ac.il@cpu-s-master ~]$

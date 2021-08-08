@@ -1,7 +1,9 @@
 import numpy as np
 import pandas as pd
-from automatic_FE.auto_by_criteria import *
-from automatic_FE.importances_features import *
+from auto_by_criteria import *
+#import auto_by_criteria as ac
+#from automatic_FE.importances_features import *
+from importances_features import *
 
 import sys
 import os
@@ -19,6 +21,115 @@ def multiplication(f1,f2):
 operators_binary_direction_important= [minus,divide]
 #operators_binary_direction_important= []
 operators_binary_direction_NOT_important= [multiplication,plus]
+
+
+
+
+def find_X_from_RF_train_test(train,test,x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,depth=None):
+    #arr_base = baseline_classifier_competition(train, test, data, x_names, y_names, criteria_Function, f_name,number_of_trees, depth)
+    #handle_baseline_results(arr_base, data.copy(), depth)
+
+    start_time = time.time()
+    if depth == None:
+        central_clf = RandomForestClassifier(n_estimators=number_of_trees * 3,random_state=None)\
+            .fit(train[x_names],np.array(train[y_names]))
+    else:
+        central_clf = RandomForestClassifier(n_estimators=number_of_trees * 3,max_depth=depth,random_state=None)\
+            .fit(train[x_names],np.array(train[y_names]))
+
+
+    end_time = time.time()
+    fit_time = end_time - start_time
+
+    correct_trees = list()
+    index_trees=0
+    for cur_tree in central_clf.estimators_:
+        if index_trees == number_of_trees:
+            break
+        if f_name:
+            text_representation = tree.export_text(cur_tree, feature_names=x_names)
+            if f_name in text_representation and all_words_in_string(text_representation):
+                correct_trees.append(cur_tree)
+                index_trees += 1
+        else:
+            correct_trees.append(cur_tree)
+            index_trees += 1
+
+    pred_acc=0
+    precision_all=0
+    recall_all=0
+    f_measure_all=0
+    roc_all=0
+    prc_all=0
+    criterion_trees=0
+    #confusion_all=0
+
+    n_leaves_all =0
+    max_depth_all=0
+    node_count_all=0
+
+    if index_trees != number_of_trees:          ####check this####
+        global criterion_base
+        pred_acc =0
+        criterion_trees = criterion_base
+    else:
+        for cur_tree in correct_trees:
+            start_time = time.time()
+            prediction = cur_tree.predict(test[x_names])  # the predictions labels
+            end_time = time.time()
+            pred_time = end_time - start_time
+            acu_test = metrics.accuracy_score(pd.Series.tolist(test[y_names]), prediction)
+            pred_acc += acu_test
+            #confusion_all += confusion_matrix(pd.Series.tolist(data.iloc[test][y_names]), prediction)
+            y_true = pd.Series.tolist(test[y_names])
+            y_pred = list(prediction)
+            un_true, _ = np.unique(y_true, return_counts=True)
+            un_pred, _ = np.unique(y_pred, return_counts=True)
+            if len(un_true) == 1 or len(un_pred) == 1:
+                y_true.append(0)
+                y_true.append(1)
+                y_pred.append(0)
+                y_pred.append(1)
+                y_true.append(0)
+                y_true.append(1)
+                y_pred.append(1)
+                y_pred.append(0)
+                #print("zero or ones")
+            criterion_trees += criteria_Function(cur_tree)
+            precision_all += metrics.precision_score(y_true, y_pred,average='weighted')
+            recall_all += metrics.recall_score(y_true, y_pred,average='weighted')
+            f_measure_all += metrics.f1_score(y_true, y_pred,average='weighted')
+            try:
+                roc_all += metrics.roc_auc_score(y_true, y_pred)
+            except:
+                #print("exception_roc")
+                roc_all +=  0
+            try:
+                precision_prc, recall_prc, thresholds_prc = metrics.precision_recall_curve(y_true, y_pred)
+                prc_all += metrics.auc(recall_prc, precision_prc)
+            except:
+                #print("exception_prc - N")
+                prc_all += 1
+
+            ############## All the criterion options on cur_tree:
+            n_leaves_all += cur_tree.tree_.n_leaves
+            max_depth_all += cur_tree.tree_.max_depth
+            node_count_all += cur_tree.tree_.node_count
+
+
+        pred_acc /= index_trees
+        #confusion_all = confusion_all/index_trees
+        precision_all/= index_trees
+        recall_all/= index_trees
+        f_measure_all/= index_trees
+        roc_all/= index_trees
+        prc_all/= index_trees
+        n_leaves_all /= index_trees
+        max_depth_all/= index_trees
+        node_count_all/= index_trees
+        criterion_trees /= index_trees
+
+    return np.array(list((pred_acc, criterion_trees,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all))).tolist()
 
 
 # def from_name_to_column(recieve_data,name):
@@ -68,7 +179,7 @@ dfAllPred= pd.DataFrame(
 columns=['dataset_name','number_of_features','number_of_classes','dataset_size','using_criterion',
          'accuracy_base', 'criteria_base','precision_base','recall_base','f_measure_base','roc_base','prc_base','n_leaves_base','max_depth_base','node_count_base',
          'number_of_folds','depth_max','number_of_trees_per_fold','number_of_rounds','delete_used_f', 'added_features','all_features',
-         'accuracy_after', 'criteria_after','precision_after','recall_after','f_measure_after','roc_after','prc_after','n_leaves_after','max_depth_after','node_count_after'])
+         'accuracy_after', 'criteria_after','precision_after','recall_after','f_measure_after','roc_after','prc_after','n_leaves_after','max_depth_after','node_count_after','method'])
 
 
 print (os.path.dirname(os.path.abspath(__file__)))
@@ -323,6 +434,7 @@ for delete_used_f in [True,False]:
     for criterion_name, criterion_function in all_criterions.items():
         #for cur_depth in [None,1,2,3,5,10,15,20,25]:
         for cur_depth in [None]:
+            set_params(str(f_number),str(un_class), criterion_name, str(number_of_kFolds),str(number_of_trees_per_fold), str(delete_used_f))
             before_acu_test, before_criterion, rounds, added_f_names, acu_test, criterion_after ,precision_before, recall_before, f_measure_before, roc_before, prc_before, n_leaves_before, max_depth_before, node_count_before, precision_after, recall_after, f_measure_after, roc_after, prc_after, n_leaves_after, max_depth_after, node_count_after, last_x_name, new_ds =\
                 auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_chosen.copy(),X_names_ds,y_names,features_unary,features_binary,cur_depth,result_path,criterion_function,delete_used_f)
 
@@ -332,20 +444,34 @@ for delete_used_f in [True,False]:
                                                       str(last_x_name),str(acu_test),str(criterion_after),
                                                       str(precision_after), str(recall_after), str(f_measure_after),
                                                       str(roc_after), str(prc_after), str(n_leaves_after),
-                                                      str(max_depth_after), str(node_count_after)])
+                                                      str(max_depth_after), str(node_count_after),"ours"])
             write_to_excel_dfAllPred()
 
+
+            #def find_X_from_RF_train_test(train, test, x_names, y_names, criteria_Function, f_name=None,
+            #                              number_of_trees=5, depth=None)
             #predict_kfold(data, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,paramK=5,depth=None)
             if test_train_split == True:
                 (r_test_acu_base, r_test_criterion_base, r_test_precision_base, r_test_recall_base, r_test_f_measure_base, r_test_roc_base, r_test_prc_base,
-                 r_test_n_leaves_base, r_test_max_depth_base, r_test_node_count_base), clf_base = \
-                    predict_kfold(NEW_data_testing, X_names_ds, y_names, criterion_function, None, number_of_trees_per_fold,
-                                  number_of_kFolds, cur_depth)
+                 r_test_n_leaves_base, r_test_max_depth_base, r_test_node_count_base) = \
+                    find_X_from_RF_train_test(data_chosen,NEW_data_testing, X_names_ds, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
+
+                arr_res = find_X_from_baseline_STree_train_test(data_chosen, NEW_data_testing, X_names_ds, y_names,
+                                                                criterion_function, None, number_of_trees_per_fold,
+                                                                cur_depth)
+                handle_baseline_results_STree(arr_res, NEW_data_testing, cur_depth, X_names_ds, "test_all_f")
+
+                arr_res = find_X_from_baseline_xgboost_train_test(data_chosen, NEW_data_testing, X_names_ds, y_names,
+                                                                criterion_function, None, number_of_trees_per_fold,
+                                                                cur_depth)
+                handle_baseline_results_xgboost(arr_res, NEW_data_testing, cur_depth, X_names_ds, "test_all_f")
+
                 NEW_data_testing = prepare_new_ds(NEW_data_testing,added_f_names,f_number)
+                data_chosen_new = prepare_new_ds(data_chosen.copy(),added_f_names,f_number)
+
                 (r_test_acu, r_test_criterion, r_test_precision, r_test_recall, r_test_f_measure, r_test_roc, r_test_prc,
-                 r_test_n_leaves, r_test_max_depth, r_test_node_count), clf = \
-                    predict_kfold(NEW_data_testing, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,
-                                  number_of_kFolds, cur_depth)
+                 r_test_n_leaves, r_test_max_depth, r_test_node_count) = \
+                    find_X_from_RF_train_test(data_chosen_new,NEW_data_testing, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
 
                 dfAllPred.loc[len(dfAllPred)] = np.array(
                     [db_name, str(f_number), str(un_class), str(NEW_data_testing.shape[0]), criterion_name+"_testing", str(r_test_acu_base),
@@ -357,21 +483,19 @@ for delete_used_f in [True,False]:
                      str(last_x_name), str(r_test_acu), str(r_test_criterion),
                      str(r_test_precision), str(r_test_recall), str(r_test_f_measure),
                      str(r_test_roc), str(r_test_prc), str(r_test_n_leaves),
-                     str(r_test_max_depth), str(r_test_node_count)])
-                write_to_excel_dfAllPred()
+                     str(r_test_max_depth), str(r_test_node_count),"ours"])
 
                 write_to_excel_dfAllPred()
 
-            if rounds>0:
-                importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data_chosen,new_ds,added_f_names,last_x_name,X_names_ds,y_names,100,criterion_function)
+                arr_res = find_X_from_baseline_STree_train_test(data_chosen_new,NEW_data_testing, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
+                handle_baseline_results_STree(arr_res, NEW_data_testing, cur_depth, last_x_name, "test_new_f")
 
+                arr_res = find_X_from_baseline_xgboost_train_test(data_chosen_new, NEW_data_testing, last_x_name, y_names,
+                                                                  criterion_function, None, number_of_trees_per_fold,
+                                                                  cur_depth)
+                handle_baseline_results_xgboost(arr_res, NEW_data_testing, cur_depth, last_x_name, "test_new_f")
 
-
-
-
-
-
-
-
+            #if rounds>0:
+                #importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data_chosen,new_ds,added_f_names,last_x_name,X_names_ds,y_names,100,criterion_function)
 
 

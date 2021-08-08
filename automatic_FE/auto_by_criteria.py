@@ -8,6 +8,7 @@ import time
 from sklearn import metrics
 from sklearn import tree
 from sklearn.metrics import classification_report, confusion_matrix
+from STree_ObliqueTreeBasedSVM import *
 
 
 #############################
@@ -21,11 +22,14 @@ from sklearn.metrics import classification_report, confusion_matrix
 import warnings
 warnings.filterwarnings('ignore')
 
+
 def normalize_results(pred,index,dataset_name,method,number_of_classes,cluster_number,dataset_size,using_model):
     pred /= index
     pred_list = pred.tolist()
     pred_list = [dataset_name, method, number_of_classes, cluster_number, dataset_size, using_model] + pred_list
     return pred_list
+
+
 def encode_categorial(data):
     """
     change the category data to numbers represent the value
@@ -158,20 +162,37 @@ def multi_class_DT_pred(train,test,data, x_names,y_names):
     #return (np.array(list((acu_test,num_of_leaves))),central_clf)
     return (np.array(list((acu_test)),central_clf))
 
-def predict_kfold(data, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,paramK=5,depth=None):
+def predict_kfold(data, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,paramK=5,depth=None,use_baseline=False):
     kfold = KFold(paramK)
     index = 0
     size = data.shape[0]
     all_DT_pred =0
+    STREE_baseline_pred =0
+    XGBOOST_baseline_pred =0
     for train, test in kfold.split(data):
         index += 1
         #arr,clf = multi_class_DT_pred(train,test,data, x_names,y_names)
         arr,clf = find_X_from_RF(train,test,data, x_names,y_names,criteria_Function,f_name,number_of_trees,depth)
         all_DT_pred += arr
+        if use_baseline:
+            arr_baseline1, clf = baseline_STree_classifier_competition(train,test,data, x_names,y_names,criteria_Function,f_name,number_of_trees,depth)
+            STREE_baseline_pred += arr_baseline1
+            arr_baseline2, clf = baseline_xgboost_classifier_competition(train, test, data, x_names, y_names,criteria_Function, f_name, number_of_trees, depth)
+            XGBOOST_baseline_pred += arr_baseline2
+
 
     #results_all_multi_class_DT_pred = normalize_results(all_multi_class_DT_pred,index,name,"decision_tree",number_of_classes,"-",size,"decision_tree")
     all_DT_pred /= index
     all_pred_measures_list = all_DT_pred.tolist()
+
+    if use_baseline:
+        STREE_baseline_pred /= index
+        STREE_baseline_pred_list = STREE_baseline_pred.tolist()
+        handle_baseline_results_STree(STREE_baseline_pred_list, data.copy(), depth, x_names, "train")
+        XGBOOST_baseline_pred /= index
+        XGBOOST_baseline_pred_list = XGBOOST_baseline_pred.tolist()
+        handle_baseline_results_xgboost(XGBOOST_baseline_pred_list, data.copy(), depth, x_names, "train")
+
     return all_pred_measures_list,clf
     #dfAllPred.loc[len(dfAllPred)] = results_all_multi_class_DT_pred
 
@@ -343,7 +364,7 @@ def auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_na
    # base_pred,clf_list_base = \
     (base_acu_test, base_criterion, precision_base, recall_base, f_measure_base, roc_base, prc_base,
          n_leaves_base, max_depth_base, node_count_base),clf = \
-        predict_kfold(data, X_names, y_names,criteria_Function,None,number_of_trees_per_fold,number_of_kFolds,depth)
+        predict_kfold(data, X_names, y_names,criteria_Function,None,number_of_trees_per_fold,number_of_kFolds,depth,True)
     #base_acu_test = base_pred[0]
     #base_criterion = base_pred[1]
 
@@ -415,6 +436,9 @@ def auto_F_E(number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_na
         f.write(str(criterion_cur)+" \n")
     f.close()
 
+    arr2, clf = \
+        predict_kfold(data.copy(), X_names, y_names, criteria_Function, None, number_of_trees_per_fold, number_of_kFolds,
+                      depth, True)
     return base_acu_test,base_criterion,rounds,added_f_names,last_acu_test,last_criterion_cur, precision_base, recall_base, f_measure_base, roc_base, prc_base,n_leaves_base, max_depth_base, node_count_base,precision_last, recall_last, f_measure_last, roc_last, prc_last,n_leaves_last, max_depth_last, node_count_last,X_names,data.copy()
 
 dic_new_features={}

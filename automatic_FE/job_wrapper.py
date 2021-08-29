@@ -18,6 +18,379 @@ def divide(f1,f2):
 def multiplication(f1,f2):
     return f1*f2
 
+def svc_binary_linear(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new :
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable =  data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable=[v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='linear').fit(train_fs_df,np.array(train_lable))
+    node= cur_tree_linear.tree_
+    xp = pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_linear(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='linear').fit(train_fs_df,np.array(train_lable))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    return pd.Series(prediction_linear)
+
+def svc_distance_linear(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='linear').fit(train_fs_df,np.array(train_lable))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+
+def svc_binary_poly(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new :
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable =  data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable=[v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='poly').fit(train_fs_df,np.array(train_lable))
+    node= cur_tree_linear.tree_
+    xp = pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_poly(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='poly').fit(train_fs_df,np.array(train_lable))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    return pd.Series(prediction_linear)
+
+def svc_distance_poly(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='poly').fit(train_fs_df,np.array(train_lable))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+def svc_binary_rbf(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new :
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable =  data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable=[v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='rbf').fit(train_fs_df,np.array(train_lable))
+    node= cur_tree_linear.tree_
+    xp = pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_rbf(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='rbf').fit(train_fs_df,np.array(train_lable))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    return pd.Series(prediction_linear)
+
+def svc_distance_rbf(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='rbf').fit(train_fs_df,np.array(train_lable))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+def svc_binary_sigmoid(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new :
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable =  data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable=[v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='sigmoid').fit(train_fs_df,np.array(train_lable))
+    node= cur_tree_linear.tree_
+    xp = pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_sigmoid(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='sigmoid').fit(train_fs_df,np.array(train_lable))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    return pd.Series(prediction_linear)
+
+def svc_distance_sigmoid(f1,f2):
+    #var_name_f1 = [k for k, v in globals().items() if v is f1][0]
+    #var_name_f2 = [k for k, v in globals().items() if v is f2][0]
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f1):
+                var_name_f1 = k
+                break
+
+    for k, v in globals().items():
+        if type(v) == pd.core.series.Series:
+            if list(v) == list(f2):
+                var_name_f2 = k
+                break
+
+    if var_name_f1 in data_chosen_new and var_name_f2 in data_chosen_new:
+        train_fs_df = pd.DataFrame(data=[data_chosen_new[var_name_f1], data_chosen_new[var_name_f2]]).T
+        train_lable = data_chosen_new[y_names]
+    else:
+        train_fs_df = pd.DataFrame(data=[f1, f2]).T
+        train_lable = [v for k, v in globals().items() if k is y_names][0]
+
+    cur_tree_linear = Stree(max_depth=2, kernel='sigmoid').fit(train_fs_df,np.array(train_lable))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(pd.DataFrame(data=[f1, f2]).T.copy().reset_index(drop=True))
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+
+
+
+
 operators_binary_direction_important= [minus,divide]
 #operators_binary_direction_important= []
 operators_binary_direction_NOT_important= [multiplication,plus]
@@ -162,10 +535,13 @@ def find_X_from_RF_train_test(train,test,x_names,y_names,criteria_Function,f_nam
     # return oper(f1,f2)
 
 def from_name_to_column(recieve_data,name,number_of_f):
-    for i in range(1,number_of_f+1):
-        locals()['att'+str(i)] = recieve_data['att'+str(i)]
+    #for i in range(1,number_of_f+1):
+    #    locals()['att'+str(i)] = recieve_data['att'+str(i)]
+    for col_name in recieve_data:
+        globals()[col_name] = recieve_data[col_name]
 
     return eval(name)
+
 
 def prepare_new_ds(data_testing,added_f_names,number_of_f):
     for name in added_f_names:
@@ -229,6 +605,7 @@ number_of_kFolds = 10
 number_of_trees_per_fold = 10
 depth = None  ###################################### add as parameter
 all_criterions={'max_depth': criteria_max_depth ,'number_of_leaves':criteria_number_of_leaves,'number_of_nodes':criteria_number_of_nodes}
+#all_criterions={'number_of_leaves':criteria_number_of_leaves,'number_of_nodes':criteria_number_of_nodes}
 
 
 if(dataset_name=='magic'):
@@ -431,6 +808,7 @@ if test_train_split == True:
 #c2 = from_name_to_column(data_chosen,'minus(divide(att3,att2),multiplication(att2,divide(att2,minus(att3,att1))))',3)
 
 for delete_used_f in [True,False]:
+#for delete_used_f in [False]:
     for criterion_name, criterion_function in all_criterions.items():
         #for cur_depth in [None,1,2,3,5,10,15,20,25]:
         for cur_depth in [None]:
@@ -459,15 +837,18 @@ for delete_used_f in [True,False]:
                 arr_res = find_X_from_baseline_STree_train_test(data_chosen, NEW_data_testing, X_names_ds, y_names,
                                                                 criterion_function, None, number_of_trees_per_fold,
                                                                 cur_depth)
+                
                 handle_baseline_results_STree(arr_res, NEW_data_testing, cur_depth, X_names_ds, "test_all_f")
-
+                '''
                 arr_res = find_X_from_baseline_xgboost_train_test(data_chosen, NEW_data_testing, X_names_ds, y_names,
                                                                 criterion_function, None, number_of_trees_per_fold,
                                                                 cur_depth)
                 handle_baseline_results_xgboost(arr_res, NEW_data_testing, cur_depth, X_names_ds, "test_all_f")
+                '''
 
-                NEW_data_testing = prepare_new_ds(NEW_data_testing,added_f_names,f_number)
+                data_chosen_new = pd.DataFrame()
                 data_chosen_new = prepare_new_ds(data_chosen.copy(),added_f_names,f_number)
+                NEW_data_testing = prepare_new_ds(NEW_data_testing,added_f_names,f_number)
 
                 (r_test_acu, r_test_criterion, r_test_precision, r_test_recall, r_test_f_measure, r_test_roc, r_test_prc,
                  r_test_n_leaves, r_test_max_depth, r_test_node_count) = \
@@ -487,14 +868,15 @@ for delete_used_f in [True,False]:
 
                 write_to_excel_dfAllPred()
 
+
                 arr_res = find_X_from_baseline_STree_train_test(data_chosen_new,NEW_data_testing, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
                 handle_baseline_results_STree(arr_res, NEW_data_testing, cur_depth, last_x_name, "test_new_f")
-
+                '''
                 arr_res = find_X_from_baseline_xgboost_train_test(data_chosen_new, NEW_data_testing, last_x_name, y_names,
                                                                   criterion_function, None, number_of_trees_per_fold,
                                                                   cur_depth)
                 handle_baseline_results_xgboost(arr_res, NEW_data_testing, cur_depth, last_x_name, "test_new_f")
-
+                '''
             #if rounds>0:
                 #importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data_chosen,new_ds,added_f_names,last_x_name,X_names_ds,y_names,100,criterion_function)
 

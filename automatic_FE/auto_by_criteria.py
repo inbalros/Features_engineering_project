@@ -116,6 +116,165 @@ def divide(f1,f2):
 def multiplication(f1,f2):
     return data[f1]*data[f2]
 
+
+def predict_class(xp, node ,Stree):
+    if xp is None:
+        return [], []
+    #if node.is_leaf():
+    # set a class for every sample in dataset
+    #    prediction = np.full((xp.shape[0], 1), node._class)
+    #    return prediction, indices
+    Stree.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = Stree.splitter_.part(indices)
+    xp['new'] = 1
+    xp.loc[i_u,'new'] = 0
+    #xp.iloc[i_u]['new'] = 0
+
+    #df = pd.DataFrame()
+
+    #prx_u, prin_u = predict_class(x_u, i_u, node.get_up())
+    #prx_d, prin_d = predict_class(x_d, i_d, node.get_down())
+    #return np.append(prx_u, prx_d), np.append(prin_u, prin_d)
+    return xp
+
+
+#    predict_class((data.iloc[train][x_names]).copy().reset_index(drop=True), cur_tree_linear.tree_, cur_tree_linear)
+def svc_binary_linear(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='linear').fit(data[[f1,f2]],np.array(data[y_names]))
+    node= cur_tree_linear.tree_
+    xp = data[[f1,f2]].copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_linear(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='linear').fit(data[[f1,f2]],np.array(data[y_names]))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    return pd.Series(prediction_linear)
+
+"""
+Python's SVM implementation uses one-vs-one. That's exactly what the book is talking about.
+For each pairwise comparison, we measure the decision function
+The decision function is the just the regular binary SVM decision boundary
+What does that to do with your question?
+
+clf.decision_function() will give you the $D$ for each pairwise comparison
+The class with the most votes win
+For instance,
+
+[[ 96.42193513 -11.13296606 111.47424538 -88.5356536 44.29272494 141.0069203 ]]
+
+is comparing:
+
+[AB, AC, AD, BC, BD, CD]
+
+We label each of them by the sign. We get:
+
+[A, C, A, C, B, C]
+
+For instance, 96.42193513 is positive and thus A is the label for AB.
+
+Now we have three C, C would be your prediction. If you repeat my procedure for the other two examples, you will get Python's prediction. Try it!
+"""
+def svc_distance_linear(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='linear').fit(data[[f1,f2]],np.array(data[y_names]))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(data[[f1,f2]])
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+
+def svc_binary_poly(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='poly').fit(data[[f1,f2]],np.array(data[y_names]))
+    node= cur_tree_linear.tree_
+    xp = data[[f1,f2]].copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_poly(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='poly').fit(data[[f1,f2]],np.array(data[y_names]))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    return pd.Series(prediction_linear)
+
+def svc_distance_poly(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='poly').fit(data[[f1,f2]],np.array(data[y_names]))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(data[[f1,f2]])
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+def svc_binary_rbf(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='rbf').fit(data[[f1,f2]],np.array(data[y_names]))
+    node= cur_tree_linear.tree_
+    xp = data[[f1,f2]].copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_rbf(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='rbf').fit(data[[f1,f2]],np.array(data[y_names]))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    return pd.Series(prediction_linear)
+
+def svc_distance_rbf(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='rbf').fit(data[[f1,f2]],np.array(data[y_names]))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(data[[f1,f2]])
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+def svc_binary_sigmoid(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='sigmoid').fit(data[[f1,f2]],np.array(data[y_names]))
+    node= cur_tree_linear.tree_
+    xp = data[[f1,f2]].copy().reset_index(drop=True)
+    cur_tree_linear.splitter_.partition(np.array(xp), node, train=False)
+    #x_u, x_d = Stree.splitter_.part(xp)
+    indices = np.arange(xp.shape[0])
+    i_u, i_d = cur_tree_linear.splitter_.part(indices)
+    xp['new'] = 1
+    if i_u is not None:
+        xp.loc[i_u,'new'] = 0
+    return xp['new']
+
+def svc_prediction_sigmoid(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='sigmoid').fit(data[[f1,f2]],np.array(data[y_names]))
+    prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    return pd.Series(prediction_linear)
+
+def svc_distance_sigmoid(f1,f2):
+    cur_tree_linear = Stree(max_depth=2, kernel='sigmoid').fit(data[[f1,f2]],np.array(data[y_names]))
+    #prediction_linear = cur_tree_linear.tree_._clf.predict(data[[f1,f2]])
+    node= cur_tree_linear.tree_
+    distance_points =  node._clf.decision_function(data[[f1,f2]])
+    xp = pd.DataFrame(distance_points)
+    xp['new'] = xp.apply(lambda row: np.linalg.norm(row), axis=1)
+    return xp['new']
+
+
 def create_new_features(features_unary,features_binary):
     global new_features_names
     global dic_new_features
@@ -177,8 +336,8 @@ def predict_kfold(data, x_names,y_names,criteria_Function,f_name=None,number_of_
         if use_baseline:
             arr_baseline1, clf = baseline_STree_classifier_competition(train,test,data, x_names,y_names,criteria_Function,f_name,number_of_trees,depth)
             STREE_baseline_pred += arr_baseline1
-            arr_baseline2, clf = baseline_xgboost_classifier_competition(train, test, data, x_names, y_names,criteria_Function, f_name, number_of_trees, depth)
-            XGBOOST_baseline_pred += arr_baseline2
+            #arr_baseline2, clf = baseline_xgboost_classifier_competition(train, test, data, x_names, y_names,criteria_Function, f_name, number_of_trees, depth)
+            #XGBOOST_baseline_pred += arr_baseline2
 
 
     #results_all_multi_class_DT_pred = normalize_results(all_multi_class_DT_pred,index,name,"decision_tree",number_of_classes,"-",size,"decision_tree")
@@ -189,9 +348,9 @@ def predict_kfold(data, x_names,y_names,criteria_Function,f_name=None,number_of_
         STREE_baseline_pred /= index
         STREE_baseline_pred_list = STREE_baseline_pred.tolist()
         handle_baseline_results_STree(STREE_baseline_pred_list, data.copy(), depth, x_names, "train")
-        XGBOOST_baseline_pred /= index
-        XGBOOST_baseline_pred_list = XGBOOST_baseline_pred.tolist()
-        handle_baseline_results_xgboost(XGBOOST_baseline_pred_list, data.copy(), depth, x_names, "train")
+        #XGBOOST_baseline_pred /= index
+        #XGBOOST_baseline_pred_list = XGBOOST_baseline_pred.tolist()
+        #handle_baseline_results_xgboost(XGBOOST_baseline_pred_list, data.copy(), depth, x_names, "train")
 
     return all_pred_measures_list,clf
     #dfAllPred.loc[len(dfAllPred)] = results_all_multi_class_DT_pred
@@ -451,10 +610,19 @@ criterion_base = 0
 
 operators_binary_direction_important= [minus,divide]
 #operators_binary_direction_important= []
-operators_binary_direction_NOT_important= [multiplication,plus]
+operators_binary_direction_NOT_important= [multiplication,plus,svc_binary_linear,svc_prediction_linear,svc_distance_linear,svc_binary_poly,
+svc_prediction_poly,
+svc_distance_poly,
+svc_binary_rbf,
+svc_prediction_rbf,
+svc_distance_rbf,
+svc_binary_sigmoid,
+svc_prediction_sigmoid,
+svc_distance_sigmoid]
 #operators_binary_direction_NOT_important= [plus]
 operators_unary=[]
 
+operators_SVC_direction_NOT_important =[]
 # for key, value in my_dict.items():
 
 

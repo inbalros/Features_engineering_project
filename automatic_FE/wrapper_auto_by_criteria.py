@@ -6,7 +6,7 @@
 #############################
 import numpy as np
 import pandas as pd
-from automatic_FE.auto_by_criteria import *
+from auto_by_criteria import *
 
 result_path =r"D:\phd\results\results.txt"
 

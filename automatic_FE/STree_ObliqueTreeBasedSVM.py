@@ -35,6 +35,29 @@ number_of_folds_cur=0
 number_of_trees_per_fold_cur=0
 delete_used_f_cur=0
 
+pred_acc_before=0
+criterion_trees_before=0
+precision_all_before=0
+recall_all_before=0
+f_measure_all_before=0
+roc_all_before=0
+prc_all_before=0
+n_leaves_all_before=0
+max_depth_all_before=0
+node_count_all_before=0
+pred_acc_after=0
+criterion_trees_after=0
+precision_all_after=0
+recall_all_after=0
+f_measure_all_after=0
+roc_all_after=0
+prc_all_after=0
+n_leaves_all_after=0
+max_depth_all_after=0
+node_count_all_after=0
+before_quality_result=0
+after_quality_result=0
+
 def set_params(number_of_features,number_of_classes,using_criterion,number_of_folds,number_of_trees_per_fold,delete_used_f):
     global number_of_features_cur
     number_of_features_cur = number_of_features
@@ -134,21 +157,21 @@ def max_depth_xgboost(booster):
     return max_depth_all
 
 
-def baseline_STree_classifier_competition(train,test,data, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,depth=None):
+def baseline_STree_classifier_competition(train,test, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,depth=None):
     if depth == None:
-        cur_tree =Stree(max_depth=100000).fit(data.iloc[train][x_names], np.array(data.iloc[train][y_names]))
+        cur_tree =Stree(max_depth=100000).fit(train[x_names], np.array(train[y_names]))
     else:
-        cur_tree = Stree(max_depth=depth).fit(data.iloc[train][x_names], np.array(data.iloc[train][y_names]))
+        cur_tree = Stree(max_depth=depth).fit(train[x_names], np.array(train[y_names]))
     start_time = time.time()
-    prediction = cur_tree.predict(data.iloc[test][x_names])  # the predictions labels
+    prediction = cur_tree.predict(test[x_names])  # the predictions labels
     end_time = time.time()
     pred_time = end_time - start_time
-    pred_acc = metrics.accuracy_score(pd.Series.tolist(data.iloc[test][y_names]), prediction)
-    y_true = pd.Series.tolist(data.iloc[test][y_names])
+    pred_acc = metrics.accuracy_score(pd.Series.tolist(test[y_names]), prediction)
+    y_true = pd.Series.tolist(test[y_names])
     y_pred = list(prediction)
     un_true, _ = np.unique(y_true, return_counts=True)
     un_pred, _ = np.unique(y_pred, return_counts=True)
-    if len(un_true) == 1 or len(un_pred) == 1:
+    if len(un_true) == 1 and len(un_pred) == 1:
         y_true.append(0)
         y_true.append(1)
         y_pred.append(0)
@@ -159,6 +182,7 @@ def baseline_STree_classifier_competition(train,test,data, x_names,y_names,crite
         y_pred.append(0)
         # print("zero or ones")
     criterion_trees = 0
+    quality_result = 0
     precision_all = metrics.precision_score(y_true, y_pred, average='weighted')
     recall_all = metrics.recall_score(y_true, y_pred, average='weighted')
     f_measure_all = metrics.f1_score(y_true, y_pred, average='weighted')
@@ -178,7 +202,7 @@ def baseline_STree_classifier_competition(train,test,data, x_names,y_names,crite
     n_leaves_all = number_of_leafs_STree(cur_tree)
     max_depth_all = max_depth_STree(cur_tree)
     node_count_all = number_of_nodes_STree(cur_tree)
-    return (np.array(list((pred_acc, criterion_trees,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all))), cur_tree)
+    return (np.array(list((quality_result, criterion_trees,pred_acc,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all))), cur_tree)
 
 def find_X_from_baseline_STree_train_test(train,test,x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,depth=None):
 
@@ -195,7 +219,7 @@ def find_X_from_baseline_STree_train_test(train,test,x_names,y_names,criteria_Fu
     y_pred = list(prediction)
     un_true, _ = np.unique(y_true, return_counts=True)
     un_pred, _ = np.unique(y_pred, return_counts=True)
-    if len(un_true) == 1 or len(un_pred) == 1:
+    if len(un_true) == 1 and len(un_pred) == 1:
         y_true.append(0)
         y_true.append(1)
         y_pred.append(0)
@@ -206,6 +230,7 @@ def find_X_from_baseline_STree_train_test(train,test,x_names,y_names,criteria_Fu
         y_pred.append(0)
         # print("zero or ones")
     criterion_trees = 0
+    quality_result_trees = 0
     precision_all = metrics.precision_score(y_true, y_pred, average='weighted')
     recall_all = metrics.recall_score(y_true, y_pred, average='weighted')
     f_measure_all = metrics.f1_score(y_true, y_pred, average='weighted')
@@ -226,14 +251,45 @@ def find_X_from_baseline_STree_train_test(train,test,x_names,y_names,criteria_Fu
     max_depth_all = max_depth_STree(cur_tree)
     node_count_all = number_of_nodes_STree(cur_tree)
 
-    return np.array(list((pred_acc, criterion_trees,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all))).tolist()
+    return np.array(list((quality_result_trees, criterion_trees,pred_acc,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all))).tolist()
 
-def handle_baseline_results_STree(results,data,depth,x_names,baseline_from):
-    pred_acc, criterion_trees,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all = results
+def handle_baseline_results_STree(results,data,depth,x_names,baseline_from,type): #"after"/"before"
+    global pred_acc_before
+    global criterion_trees_before
+    global precision_all_before
+    global recall_all_before
+    global f_measure_all_before
+    global roc_all_before
+    global prc_all_before
+    global n_leaves_all_before
+    global max_depth_all_before
+    global node_count_all_before
+    global pred_acc_after
+    global criterion_trees_after
+    global precision_all_after
+    global recall_all_after
+    global f_measure_all_after
+    global roc_all_after
+    global prc_all_after
+    global n_leaves_all_after
+    global max_depth_all_after
+    global node_count_all_after
+    global before_quality_result
+    global after_quality_result
+    if type == "before":
+        before_quality_result, criterion_trees_before,pred_acc_before,precision_all_before, recall_all_before, f_measure_all_before, roc_all_before, prc_all_before, n_leaves_all_before, max_depth_all_before, node_count_all_before = results
 
-    addToEXCEL_baseline(pred_acc, precision_all, recall_all, f_measure_all, roc_all, prc_all, n_leaves_all, max_depth_all, node_count_all,
-                            "STree - oblique "+str(baseline_from),data,depth,x_names)
+    elif type == "after":
+        after_quality_result, criterion_trees_after,pred_acc_after, precision_all_after, recall_all_after, f_measure_all_after, roc_all_after, prc_all_after, n_leaves_all_after, max_depth_all_after, node_count_all_after = results
 
+    else:
+        pass
+
+    #addToEXCEL_baseline(pred_acc, precision_all, recall_all, f_measure_all, roc_all, prc_all, n_leaves_all, max_depth_all, node_count_all,
+    #                        "STree - oblique "+str(baseline_from),data,depth,x_names)
+
+def get_data_for_EXCEL():
+    return before_quality_result,criterion_trees_before,pred_acc_before,after_quality_result,criterion_trees_after,pred_acc_after,precision_all_before,recall_all_before,f_measure_all_before,roc_all_before,prc_all_before,n_leaves_all_before,max_depth_all_before,node_count_all_before,precision_all_after,recall_all_after,f_measure_all_after,roc_all_after,prc_all_after, n_leaves_all_after,max_depth_all_after, node_count_all_after
 
 def baseline_xgboost_classifier_competition(train,test,data, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,depth=None):
     if depth == None:

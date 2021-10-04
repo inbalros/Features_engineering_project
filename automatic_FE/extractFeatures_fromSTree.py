@@ -259,7 +259,7 @@ def encode_categorial(data):
         #print(col)
         #print(data[col].dtype)
 
-
+'''
 print(dataset_name)
 if(dataset_name=='magic'):
     print(dataset_name)
@@ -435,13 +435,15 @@ elif(dataset_name=="letters"):
 else:
     exit(0)
 
+
 index=0
 kfold = KFold(5)
+
 
 for train, test in kfold.split(data_chosen):
     index += 1
     arr_baseline1, clf = baseline_STree_classifier_competition(train, test, data_chosen, X_names_ds, y_names,None, None, 100, 1)
-
+'''
 
 
 

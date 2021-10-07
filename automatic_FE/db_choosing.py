@@ -121,8 +121,15 @@ def try_prediction(data,X_names,y_names):
 
 def categ(data):
     print("DB size: "+ str(data.shape))
+
     print(data.dtypes)
     try_data = data.select_dtypes(include='object')
+    null_data = data[data.isnull().any(axis=1)]
+    print("null data: " +str(null_data.shape))
+    data = data.dropna().reset_index(drop=True)
+
+    print("DB size: "+ str(data.shape))
+
     category_columns = try_data.columns
     print(category_columns.shape)
     print(data.head())
@@ -136,8 +143,6 @@ def categ(data):
     print(data.describe().T)
     print(try_data.isnull().sum())
 
-    null_data = try_data[try_data.isnull().any(axis=1)]
-    print(null_data.shape)
     print('the value counts of the target are:')
     print(data.iloc[:, -1].value_counts())
     data.iloc[:, -1].value_counts().plot(kind='bar')
@@ -148,13 +153,153 @@ def categ(data):
 #    data_path = os.path.join(one_back,r'Data\magic04\magic.csv')
 
 
+print("start - Iris")
+#3) data set = https://archive.ics.uci.edu/ml/datasets/Iris
+data_path = os.path.join(one_back,r'Data\New\Iris\iris.csv')
+Iris = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,6)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,5)]
+y_names = "att5"
+categ(Iris)
+Iris = Iris.sample(frac = 1)
+print(Iris.head)
+Iris = Iris.reset_index(drop=True)
+categ(Iris)
+un_class = len(Iris[y_names].unique())
+print(un_class)
+
+print("start - seed")
+#5) data set = https://archive.ics.uci.edu/ml/datasets/seeds
+data_path = os.path.join(one_back,r'Data\New\seeds\seed.csv')
+seed = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,9)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,8)]
+y_names = "att8"
+categ(seed)
+seed = seed.sample(frac = 1)
+print(seed.head)
+seed = seed.reset_index(drop=True)
+categ(seed)
+un_class = len(seed[y_names].unique())
+print(un_class)
+
+
+
+exit(0)
+print("start - magic04")
+#2) data set = magic04 https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
+data_path = os.path.join(one_back,r'Data\magic04\magic.csv')
+magic = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,12)])
+X_names_ds = ["att"+str(i) for i in range(1,11)]
+y_names = "att11"
+categ(magic)
+
+magic = magic.sample(frac = 1)
+print(magic.head)
+magic = magic.reset_index(drop=True)
+categ(magic)
+
+un_class = len(magic[y_names].unique())
+print(un_class)
+
+
+
+
+exit(0)
+
+print("start - blood")
+# 8) data set = blood  https://archive.ics.uci.edu/ml/datasets/Blood+Transfusion+Service+Center
+data_path = os.path.join(one_back,r'Data\blood_transfusion\blood.csv')
+blood = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,6)])
+X_names_ds = ["att"+str(i) for i in range(1,5)]
+y_names = "att5"
+
+print(blood.head)
+
+
+categ(blood)
+
+
+
+blood = blood.sample(frac = 1)
+
+print(blood.head)
+
+blood = blood.reset_index(drop=True)
+
+
+categ(blood)
+un_class = len(blood[y_names].unique())
+print(un_class)
 
 
 
 
 
 
+print("start - mammographic")
+#4) data set = https://archive.ics.uci.edu/ml/datasets/Mammographic+Mass
+data_path = os.path.join(one_back,r'Data\New\Mammographic_Mass\mammographic.csv')
+mammographic = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,7)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,6)]
+y_names = "att6"
+categ(mammographic)
+un_class = len(mammographic[y_names].unique())
+print(un_class)
 
+
+print("start - banknote_authentication")
+#1) data set = https://archive.ics.uci.edu/ml/datasets/banknote+authentication
+data_path = os.path.join(one_back,r'Data\New\banknote_authentication\banknote_authentication.csv')
+banknote_authentication = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,6)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,5)]
+y_names = "att5"
+categ(banknote_authentication)
+un_class = len(banknote_authentication[y_names].unique())
+print(un_class)
+
+print("start - haberman")
+#2) data set = https://archive.ics.uci.edu/ml/datasets/Haberman%27s+Survival
+data_path = os.path.join(one_back,r'Data\New\Habermans_Survival\haberman.csv')
+haberman = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,5)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,4)]
+y_names = "att4"
+categ(haberman)
+un_class = len(haberman[y_names].unique())
+print(un_class)
+
+
+
+print("start - seed")
+#5) data set = https://archive.ics.uci.edu/ml/datasets/seeds
+data_path = os.path.join(one_back,r'Data\New\seeds\seed.csv')
+seed = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,9)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,8)]
+y_names = "att8"
+categ(seed)
+un_class = len(seed[y_names].unique())
+print(un_class)
+
+
+
+print("start - shuttle")
+#6) data set = https://archive.ics.uci.edu/ml/datasets/Statlog+%28Shuttle%29
+data_path = os.path.join(one_back,r'Data\New\Statlog\shuttle.csv')
+shuttle = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,11)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,10)]
+y_names = "att10"
+categ(shuttle)
+un_class = len(shuttle[y_names].unique())
+print(un_class)
+
+
+print("start - yeast")
+#7) data set = https://archive.ics.uci.edu/ml/datasets/Yeast
+data_path = os.path.join(one_back,r'Data\New\Yeast\yeast.csv')
+yeast = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,10)],skiprows=1)
+X_names_ds = ["att"+str(i) for i in range(1,9)]
+y_names = "att9"
+categ(yeast)
+un_class = len(yeast[y_names].unique())
+print(un_class)
 
 
 
@@ -166,15 +311,6 @@ def categ(data):
 
 exit(0)
 
-print("start - magic04")
-#2) data set = magic04 https://archive.ics.uci.edu/ml/datasets/MAGIC+Gamma+Telescope
-data_path = os.path.join(one_back,r'Data\magic04\magic.csv')
-magic = pd.read_csv(data_path, names=["att"+str(i) for i in range(1,12)])
-X_names_ds = ["att"+str(i) for i in range(1,11)]
-y_names = "att11"
-categ(magic)
-un_class = len(magic[y_names].unique())
-print(un_class)
 
 
 print("start - skin_nonSkin")

@@ -722,6 +722,7 @@ dataset_name= str(sys.argv[1])
 delete_used_choice= bool(sys.argv[2])
 ensemble =str(sys.argv[3])  #RF, XGB
 eval_result =str(sys.argv[4])  #acc, F, PRC
+criteria_choice =str(sys.argv[5])  #leaves, depth,nodes
 
 result_path=os.path.join(one_back,  r"results_1\results_"+dataset_name+".txt")
 
@@ -729,9 +730,13 @@ result_path=os.path.join(one_back,  r"results_1\results_"+dataset_name+".txt")
 #result_path = r"..\results\results_"+dataset_name+".txt"
 
 index1 = 1
-def write_to_excel_dfAllPred():
+def write_to_excel_dfAllPred(final=False):
     global index1
-    writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results_1\results_"+dataset_name+"_"+str(ensemble)+"_"+str(delete_used_choice)+"_"+str(eval_result)+"_"+str(index1)+".xlsx"))
+    if final:
+        writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results_1\results_"+dataset_name+"_"+str(ensemble)+"_"+str(delete_used_choice)+"_"+str(eval_result)+"_"+str(criteria_choice)+"_final.xlsx"))
+    else:
+        writerResults = pd.ExcelWriter(os.path.join(one_back,  r"results_1\results_"+dataset_name+"_"+str(ensemble)+"_"+str(delete_used_choice)+"_"+str(eval_result)+"_"+str(criteria_choice)+"_"+str(index1)+".xlsx"))
+
     index1+=1
     dfAllPred.to_excel(writerResults,'results')
     writerResults.save()
@@ -805,7 +810,7 @@ def criteria_max_depth_xgboost(booster):
 ###############################
 
 def result_quality_accuracy(y_true,y_pred):
-    return  metrics.accuracy_score(y_true, y_pred)
+    return metrics.accuracy_score(y_true, y_pred)
 
 
 def result_quality_F(y_true,y_pred):
@@ -842,9 +847,20 @@ all_criterions_XGB={'max_depth': criteria_max_depth_xgboost ,'number_of_leaves':
 #all_criterions={'number_of_leaves':criteria_number_of_leaves,'number_of_nodes':criteria_number_of_nodes}
 
 if ensemble=="RF":
-    all_criterions = all_criterions_RF
+    if criteria_choice=="leaves": #leaves, depth,nodes
+        all_criterions = {'number_of_leaves':criteria_number_of_leaves_RF}
+    elif criteria_choice=="depth": #leaves, depth,nodes
+        all_criterions = {'max_depth': criteria_max_depth_RF}
+    elif criteria_choice=="nodes": #leaves, depth,nodes
+        all_criterions = {'number_of_nodes':criteria_number_of_nodes_RF}
+
 elif ensemble=="XGB":
-    all_criterions = all_criterions_XGB
+    if criteria_choice == "leaves":  # leaves, depth,nodes
+        all_criterions = {'number_of_leaves':criteria_number_of_leaves_xgboost}
+    elif criteria_choice == "depth":  # leaves, depth,nodes
+        all_criterions = {'max_depth': criteria_max_depth_xgboost}
+    elif criteria_choice == "nodes":  # leaves, depth,nodes
+        all_criterions = {'number_of_nodes':criteria_number_of_nodes_xgboost}
 
 
 if(dataset_name=='magic'):
@@ -880,57 +896,6 @@ elif(dataset_name=="skin_nonSkin"):
     features_unary = []
     features_binary = ["att" + str(i) for i in range(1, 4)]
     label = "att4"
-    data_chosen[label] = choosen_data[label]
-
-elif(dataset_name=="cars"):
-    print(dataset_name)
-    data_path = os.path.join(one_back,r'Data\car\car.csv')
-    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 8)])
-    X_names_ds = ["att" + str(i) for i in range(1, 7)]
-    y_names = "att7"
-    encode_categorial(choosen_data)
-    un_class = len(choosen_data[y_names].unique())
-    print(un_class)
-    db_name = 'cars'
-    f_number = 6
-    data_chosen = choosen_data[X_names_ds].copy()
-    features_unary = []
-    features_binary = ["att" + str(i) for i in range(1, 7)]
-    label = "att7"
-    data_chosen[label] = choosen_data[label]
-
-elif(dataset_name=="abalone"):
-    print(dataset_name)
-    data_path = os.path.join(one_back,r'Data\abalone\abalone.csv')
-    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 10)])
-    X_names_ds = ["att" + str(i) for i in range(1, 9)]
-    y_names = "att9"
-    encode_categorial(choosen_data)
-    un_class = len(choosen_data[y_names].unique())
-    print(un_class)
-    db_name = 'abalone'
-    f_number = 8
-    data_chosen = choosen_data[X_names_ds].copy()
-    features_unary = []
-    features_binary = ["att" + str(i) for i in range(1, 9)]
-    label = "att9"
-    data_chosen[label] = choosen_data[label]
-
-elif(dataset_name=="bank"):
-    print(dataset_name)
-    data_path = os.path.join(one_back,r'Data\bank\bank.csv')
-    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 18)])
-    X_names_ds = ["att" + str(i) for i in range(1, 17)]
-    y_names = "att17"
-    encode_categorial(choosen_data)
-    un_class = len(choosen_data[y_names].unique())
-    print(un_class)
-    db_name = 'bank'
-    f_number = 16
-    data_chosen = choosen_data[X_names_ds].copy()
-    features_unary = []
-    features_binary = ["att" + str(i) for i in range(1, 17)]
-    label = "att17"
     data_chosen[label] = choosen_data[label]
 
 elif(dataset_name=="wine"):
@@ -984,23 +949,6 @@ elif(dataset_name=="wifi"):
     label = "att8"
     data_chosen[label] = choosen_data[label]
 
-elif(dataset_name=="chess"):
-    print(dataset_name)
-    data_path = os.path.join(one_back,r'Data\chess\chess.csv')
-    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 8)])
-    X_names_ds = ["att" + str(i) for i in range(1, 7)]
-    y_names = "att7"
-    encode_categorial(choosen_data)
-    un_class = len(choosen_data[y_names].unique())
-    print(un_class)
-    db_name = 'chess'
-    f_number = 6
-    data_chosen = choosen_data[X_names_ds].copy()
-    features_unary = []
-    features_binary = ["att" + str(i) for i in range(1, 7)]
-    label = "att7"
-    data_chosen[label] = choosen_data[label]
-
 elif(dataset_name=="letters"):
     print(dataset_name)
     data_path = os.path.join(one_back,r'Data\letter_recognition\letter_recognition.csv')
@@ -1018,13 +966,206 @@ elif(dataset_name=="letters"):
     label = "att17"
     data_chosen[label] = choosen_data[label]
 
+elif(dataset_name=="banknote"):
+    print(dataset_name)
+    # 1) data set = https://archive.ics.uci.edu/ml/datasets/banknote+authentication
+    data_path = os.path.join(one_back, r'Data\New\banknote_authentication\banknote_authentication.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 6)], skiprows=1)
+    X_names_ds = ["att" + str(i) for i in range(1, 5)]
+    y_names = "att5"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'banknote_authentication'
+    f_number = 4
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 5)]
+    label = "att5"
+    data_chosen[label] = choosen_data[label]
+
+elif(dataset_name=="haberman"):
+    print(dataset_name)
+    data_path = os.path.join(one_back, r'Data\New\Habermans_Survival\haberman.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 5)],skiprows=1)
+    X_names_ds = ["att" + str(i) for i in range(1, 4)]
+    y_names = "att4"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'haberman'
+    f_number = 3
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1,4)]
+    label = "att4"
+    data_chosen[label] = choosen_data[label]
+
+elif (dataset_name == "iris"):
+    print(dataset_name)
+    data_path = os.path.join(one_back, r'Data\New\Iris\iris.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 6)], skiprows=1)
+    X_names_ds = ["att" + str(i) for i in range(1, 5)]
+    y_names = "att5"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'Iris'
+    f_number = 4
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 5)]
+    label = "att5"
+    data_chosen[label] = choosen_data[label]
+
+elif (dataset_name == "mammographic"):
+    print(dataset_name)
+    data_path = os.path.join(one_back, r'Data\New\Mammographic_Mass\mammographic.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 7)], skiprows=1)
+    X_names_ds = ["att" + str(i) for i in range(1, 6)]
+    y_names = "att6"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'mammographic'
+    f_number = 5
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 6)]
+    label = "att6"
+    data_chosen[label] = choosen_data[label]
+
+elif (dataset_name == "seed"):
+    print(dataset_name)
+    data_path = os.path.join(one_back, r'Data\New\seeds\seed.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 9)], skiprows=1)
+    X_names_ds = ["att" + str(i) for i in range(1, 8)]
+    y_names = "att8"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'seed'
+    f_number = 7
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 8)]
+    label = "att8"
+    data_chosen[label] = choosen_data[label]
+
+elif (dataset_name == "shuttle"):
+    print(dataset_name)
+    data_path = os.path.join(one_back, r'Data\New\Statlog\shuttle.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 11)], skiprows=1)
+    X_names_ds = ["att" + str(i) for i in range(1, 10)]
+    y_names = "att10"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'shuttle'
+    f_number = 9
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 10)]
+    label = "att10"
+    data_chosen[label] = choosen_data[label]
+
+elif (dataset_name == "yeast"):
+    print(dataset_name)
+    data_path = os.path.join(one_back, r'Data\New\Yeast\yeast.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 10)], skiprows=1)
+    X_names_ds = ["att" + str(i) for i in range(1, 9)]
+    y_names = "att9"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'yeast'
+    f_number = 8
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 9)]
+    label = "att9"
+    data_chosen[label] = choosen_data[label]
+
 else:
     exit(0)
 
+'''
+elif(dataset_name=="cars"):
+    print(dataset_name)
+    data_path = os.path.join(one_back,r'Data\car\car.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 8)])
+    X_names_ds = ["att" + str(i) for i in range(1, 7)]
+    y_names = "att7"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'cars'
+    f_number = 6
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 7)]
+    label = "att7"
+    data_chosen[label] = choosen_data[label]
+
+elif(dataset_name=="chess"):
+    print(dataset_name)
+    data_path = os.path.join(one_back,r'Data\chess\chess.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 8)])
+    X_names_ds = ["att" + str(i) for i in range(1, 7)]
+    y_names = "att7"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'chess'
+    f_number = 6
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 7)]
+    label = "att7"
+    data_chosen[label] = choosen_data[label]
+
+elif(dataset_name=="bank"):
+    print(dataset_name)
+    data_path = os.path.join(one_back,r'Data\bank\bank.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 18)])
+    X_names_ds = ["att" + str(i) for i in range(1, 17)]
+    y_names = "att17"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'bank'
+    f_number = 16
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 17)]
+    label = "att17"
+    data_chosen[label] = choosen_data[label]
+
+elif(dataset_name=="abalone"):
+    print(dataset_name)
+    data_path = os.path.join(one_back,r'Data\abalone\abalone.csv')
+    choosen_data = pd.read_csv(data_path, names=["att" + str(i) for i in range(1, 10)])
+    X_names_ds = ["att" + str(i) for i in range(1, 9)]
+    y_names = "att9"
+    encode_categorial(choosen_data)
+    un_class = len(choosen_data[y_names].unique())
+    print(un_class)
+    db_name = 'abalone'
+    f_number = 8
+    data_chosen = choosen_data[X_names_ds].copy()
+    features_unary = []
+    features_binary = ["att" + str(i) for i in range(1, 9)]
+    label = "att9"
+    data_chosen[label] = choosen_data[label]
+'''
 
 
 test_train_split=True
 NEW_data_testing=None
+
+data_chosen = data_chosen.sample(frac = 1)
+data_chosen = data_chosen.reset_index(drop=True)
+data_chosen = data_chosen.dropna().reset_index(drop=True)
 
 if test_train_split == True:
     kfold = KFold(7)
@@ -1155,4 +1296,4 @@ for delete_used_f in [delete_used_choice]:
             #if rounds>0:
                 #importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data_chosen,new_ds,added_f_names,last_x_name,X_names_ds,y_names,100,criterion_function)
 
-
+write_to_excel_dfAllPred(True)

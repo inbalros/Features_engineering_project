@@ -3,8 +3,8 @@ import pandas as pd
 from auto_by_criteria import *
 #import auto_by_criteria as ac
 #from automatic_FE.importances_features import *
-from importances_features import *
 
+from importances_features import *
 import sys
 import os
 
@@ -606,23 +606,23 @@ def find_X_from_RF_train_test(train,test,x_names,y_names,criteria_Function,f_nam
 
     un_true, _ = np.unique(y_true, return_counts=True)
     un_pred, _ = np.unique(y_pred, return_counts=True)
-    only_one = 0
+    #only_one = 0
     #if len(un_true) == 1 or len(un_pred) == 1:
     #    print("bad " + str(x_names))
     #    only_one = 1
-    if len(un_true) == 1 and len(un_pred) == 1:
+    #if len(un_true) == 1 and len(un_pred) == 1:
         #("both " + str(x_names))
-        y_true.append(0)
-        y_true.append(1)
-        y_pred.append(0)
-        y_pred.append(1)
-        y_true.append(0)
-        y_true.append(1)
-        y_pred.append(1)
-        y_pred.append(0)
+    #    y_true.append(0)
+    #    y_true.append(1)
+    #   y_pred.append(0)
+    #    y_pred.append(1)
+    #    y_true.append(0)
+    #    y_true.append(1)
+    #    y_pred.append(1)
+    #    y_pred.append(0)
         # print("zero or ones")
-    precision_all = metrics.precision_score(y_true, y_pred, average='weighted')
-    recall_all = metrics.recall_score(y_true, y_pred, average='weighted')
+    precision_all = metrics.precision_score(y_true, y_pred, average='weighted',zero_division=0)
+    recall_all = metrics.recall_score(y_true, y_pred, average='weighted',zero_division=0)
     f_measure_all = metrics.f1_score(y_true, y_pred, average='weighted')
     try:
         roc_all = metrics.roc_auc_score(y_true, y_pred)
@@ -719,7 +719,7 @@ start_path=(os.path.dirname(os.path.abspath(__file__)))
 one_back= os.path.dirname(start_path)
 
 dataset_name= str(sys.argv[1])
-delete_used_choice= bool(sys.argv[2])
+delete_used_choice= eval(sys.argv[2])
 ensemble =str(sys.argv[3])  #RF, XGB
 eval_result =str(sys.argv[4])  #acc, F, PRC
 criteria_choice =str(sys.argv[5])  #leaves, depth,nodes

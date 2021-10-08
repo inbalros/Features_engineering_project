@@ -653,19 +653,19 @@ def find_X_from_RF(result_quality,ensemble,train,test, x_names,y_names,criteria_
     if len(un_true) == 1 or len(un_pred) == 1:
         #print("bad "+str(x_names))
         only_one = 1
-    if len(un_true) == 1 and len(un_pred) == 1:
+    #if len(un_true) == 1 and len(un_pred) == 1:
         #print("both "+str(x_names))
-        y_true.append(0)
-        y_true.append(1)
-        y_pred.append(0)
-        y_pred.append(1)
-        y_true.append(0)
-        y_true.append(1)
-        y_pred.append(1)
-        y_pred.append(0)
+    #    y_true.append(0)
+    #    y_true.append(1)
+    #    y_pred.append(0)
+    #    y_pred.append(1)
+    #    y_true.append(0)
+    #    y_true.append(1)
+    #    y_pred.append(1)
+    #    y_pred.append(0)
         #print("zero or ones")
-    precision_all = metrics.precision_score(y_true, y_pred,average='weighted')
-    recall_all = metrics.recall_score(y_true, y_pred,average='weighted')
+    precision_all = metrics.precision_score(y_true, y_pred,average='weighted',zero_division=0)
+    recall_all = metrics.recall_score(y_true, y_pred,average='weighted',zero_division=0)
     f_measure_all = metrics.f1_score(y_true, y_pred,average='weighted')
     try:
         roc_all = metrics.roc_auc_score(y_true, y_pred)
@@ -787,6 +787,7 @@ def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,d
     quality_result_test = quality_result_base
     criterion_cur = base_criterion
     last_acu_test=base_acu_test
+    last_quality_result=quality_result_base
     f = open(result_path,"a")
     f.write("data-set: \n")
     f.write(str(delete_used_f)+ "\n")

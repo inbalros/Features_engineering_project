@@ -578,6 +578,11 @@ def find_X_from_RF_train_test(train,test,x_names,y_names,criteria_Function,f_nam
         else:
             central_clf = XGBClassifier(max_depth=depth, n_estimators=number_of_trees).fit(train[x_names],
                                                                                            np.array(train[y_names]))
+    if ensemble == "OB":
+        if depth == None:
+            central_clf = Stree(max_depth=100000).fit(train[x_names],np.array(train[y_names]))
+        else:
+            central_clf = Stree(max_depth=depth).fit(train[x_names],np.array(train[y_names]))
 
     end_time = time.time()
     fit_time = end_time - start_time
@@ -586,6 +591,7 @@ def find_X_from_RF_train_test(train,test,x_names,y_names,criteria_Function,f_nam
     n_leaves_all = 0
     max_depth_all = 0
     node_count_all = 0
+    size =0
 
     # if index_trees != number_of_trees:          ####check this####
     #    global criterion_base
@@ -644,10 +650,12 @@ def find_X_from_RF_train_test(train,test,x_names,y_names,criteria_Function,f_nam
             n_leaves_all += cur_tree.tree_.n_leaves
             max_depth_all += cur_tree.tree_.max_depth
             node_count_all += cur_tree.tree_.node_count
+            size += sys.getsizeof(cur_tree)
         n_leaves_all /= number_of_trees
         max_depth_all /= number_of_trees
         node_count_all /= number_of_trees
         criterion_trees /= number_of_trees
+        size /=number_of_trees
 
     if ensemble=="XGB":
         booster = central_clf.get_booster()
@@ -655,10 +663,18 @@ def find_X_from_RF_train_test(train,test,x_names,y_names,criteria_Function,f_nam
         n_leaves_all = criteria_number_of_leaves_xgboost(booster)
         max_depth_all = criteria_max_depth_xgboost(booster)
         node_count_all = criteria_number_of_nodes_xgboost(booster)
+        size = get_xgboodt_size(booster)
+
+    if ensemble=="OB":
+        criterion_trees = criteria_Function(central_clf)
+        n_leaves_all = criteria_number_of_leaves_oblique(central_clf)
+        max_depth_all = criteria_max_depth_oblique(central_clf)
+        node_count_all = criteria_number_of_nodes_oblique(central_clf)
+        size = sys.getsizeof(central_clf)
 
 
     return np.array(list((result_quality_cur,criterion_trees,pred_acc,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,
-                          max_depth_all,node_count_all))).tolist()
+                          max_depth_all,node_count_all,size))).tolist()
 
 
 # def from_name_to_column(recieve_data,name):
@@ -711,7 +727,7 @@ dfAllPred= pd.DataFrame(
 columns=['dataset_name','number_of_features','number_of_classes','dataset_size','using_criterion','using_result_quality',
          'result_quality_base', 'criteria_base','accuracy_base','precision_base','recall_base','f_measure_base','roc_base','prc_base','n_leaves_base','max_depth_base','node_count_base',
          'number_of_folds','depth_max','number_of_trees_per_fold','number_of_rounds','delete_used_f', 'added_features','all_features',
-         'result_quality_after', 'criteria_after','accuracy_after','precision_after','recall_after','f_measure_after','roc_after','prc_after','n_leaves_after','max_depth_after','node_count_after','method','train/test'])
+         'result_quality_after', 'criteria_after','accuracy_after','precision_after','recall_after','f_measure_after','roc_after','prc_after','n_leaves_after','max_depth_after','node_count_after','method','train/test','size_model_before','size_db_train_before','size_db_test_before','size_model_after','size_db_train_after','size_db_test_after'])
 
 
 print (os.path.dirname(os.path.abspath(__file__)))
@@ -720,7 +736,7 @@ one_back= os.path.dirname(start_path)
 
 dataset_name= str(sys.argv[1])
 delete_used_choice= eval(sys.argv[2])
-ensemble =str(sys.argv[3])  #RF, XGB
+ensemble =str(sys.argv[3])  #RF, XGB , OB
 eval_result =str(sys.argv[4])  #acc, F, PRC
 criteria_choice =str(sys.argv[5])  #leaves, depth,nodes
 
@@ -757,6 +773,13 @@ def criteria_max_depth_RF(tree):
 
 def criteria_number_of_nodes_RF(tree):
     return tree.tree_.node_count
+
+def get_xgboodt_size(booster):
+    a = (booster.get_dump(
+        fmap='',
+        with_stats=True,
+        dump_format='json'))
+    return sys.getsizeof(a)
 
 def criteria_number_of_leaves_xgboost(booster):
     a = (booster.get_dump(
@@ -802,6 +825,23 @@ def criteria_max_depth_xgboost(booster):
     max_depth_all /= len(a)
     return max_depth_all
 
+def criteria_number_of_leaves_oblique(clf):
+    a = str(clf)
+    num_of_leafs = (a.count("Leaf"))
+    return num_of_leafs
+
+def criteria_number_of_nodes_oblique(clf):
+    a = str(clf)
+    num_of_nodes = (a.count("\n"))
+    return num_of_nodes
+
+def criteria_max_depth_oblique(clf):
+    a = str(clf)
+    max_depth = (max(list((w.count("-") for w in a.split("\n")))))
+    return max_depth
+
+
+
 ###############################
 #                             #
 #    all the result_quality   #
@@ -844,6 +884,7 @@ number_of_trees_per_fold = 1000
 depth = None  ###################################### add as parameter
 all_criterions_RF={'max_depth': criteria_max_depth_RF ,'number_of_leaves':criteria_number_of_leaves_RF,'number_of_nodes':criteria_number_of_nodes_RF}
 all_criterions_XGB={'max_depth': criteria_max_depth_xgboost ,'number_of_leaves':criteria_number_of_leaves_xgboost,'number_of_nodes':criteria_number_of_nodes_xgboost}
+all_criterions_OB={'max_depth': criteria_max_depth_oblique ,'number_of_leaves':criteria_number_of_leaves_oblique,'number_of_nodes':criteria_number_of_nodes_oblique}
 #all_criterions={'number_of_leaves':criteria_number_of_leaves,'number_of_nodes':criteria_number_of_nodes}
 
 if ensemble=="RF":
@@ -862,6 +903,13 @@ elif ensemble=="XGB":
     elif criteria_choice == "nodes":  # leaves, depth,nodes
         all_criterions = {'number_of_nodes':criteria_number_of_nodes_xgboost}
 
+elif ensemble=="OB":
+    if criteria_choice == "leaves":  # leaves, depth,nodes
+        all_criterions = {'number_of_leaves':criteria_number_of_leaves_oblique}
+    elif criteria_choice == "depth":  # leaves, depth,nodes
+        all_criterions = {'max_depth': criteria_max_depth_oblique}
+    elif criteria_choice == "nodes":  # leaves, depth,nodes
+        all_criterions = {'number_of_nodes':criteria_number_of_nodes_oblique}
 
 if(dataset_name=='magic'):
     print(dataset_name)
@@ -1187,6 +1235,8 @@ if test_train_split == True:
 #c1 = from_name_to_column(data_chosen,'minus(att3,att1)',3)
 #c2 = from_name_to_column(data_chosen,'minus(divide(att3,att2),multiplication(att2,divide(att2,minus(att3,att1))))',3)
 
+size=sys.getsizeof(data_chosen)
+
 #for delete_used_f in [True,False]:
 for delete_used_f in [delete_used_choice]:
 #for delete_used_f in [False]:
@@ -1203,7 +1253,7 @@ for delete_used_f in [delete_used_choice]:
                                                       str(last_x_name),str(after_quality_result),str(criterion_after),str(acu_test),
                                                       str(precision_after), str(recall_after), str(f_measure_after),
                                                       str(roc_after), str(prc_after), str(n_leaves_after),
-                                                      str(max_depth_after), str(node_count_after),"ours - "+str(ensemble),"train"])
+                                                      str(max_depth_after), str(node_count_after),"ours - "+str(ensemble),"train","","","","","",""])
             write_to_excel_dfAllPred()
 
             before_quality_result, before_criterion,before_acu_test,after_quality_result, criterion_after,acu_test, precision_before, recall_before, f_measure_before, roc_before, prc_before, n_leaves_before, max_depth_before, node_count_before, \
@@ -1219,7 +1269,7 @@ for delete_used_f in [delete_used_choice]:
                  str(last_x_name), str(after_quality_result), str(criterion_after),str(acu_test),
                  str(precision_after), str(recall_after), str(f_measure_after),
                  str(roc_after), str(prc_after), str(n_leaves_after),
-                 str(max_depth_after), str(node_count_after), "oblique","train"])
+                 str(max_depth_after), str(node_count_after), "oblique","train","","","","","",""])
             write_to_excel_dfAllPred()
 
             #def find_X_from_RF_train_test(train, test, x_names, y_names, criteria_Function, f_name=None,
@@ -1227,7 +1277,7 @@ for delete_used_f in [delete_used_choice]:
             #predict_kfold(data, x_names,y_names,criteria_Function,f_name=None,number_of_trees=5,paramK=5,depth=None)
             if test_train_split == True:
                 (before_quality_result, r_test_criterion_base,r_test_acu_base, r_test_precision_base, r_test_recall_base, r_test_f_measure_base, r_test_roc_base, r_test_prc_base,
-                 r_test_n_leaves_base, r_test_max_depth_base, r_test_node_count_base) = \
+                 r_test_n_leaves_base, r_test_max_depth_base, r_test_node_count_base,central_clf_size_before) = \
                     find_X_from_RF_train_test(data_chosen,NEW_data_testing, X_names_ds, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
 
                 arr_res = find_X_from_baseline_STree_train_test(data_chosen, NEW_data_testing, X_names_ds, y_names,
@@ -1244,14 +1294,14 @@ for delete_used_f in [delete_used_choice]:
 
                 data_chosen_new = pd.DataFrame()
                 data_chosen_new = prepare_new_ds(data_chosen.copy(),added_f_names,f_number)
-                NEW_data_testing = prepare_new_ds(NEW_data_testing,added_f_names,f_number)
+                NEW_data_testing_after = prepare_new_ds(NEW_data_testing.copy(),added_f_names,f_number)
 
                 (after_quality_result, r_test_criterion,r_test_acu, r_test_precision, r_test_recall, r_test_f_measure, r_test_roc, r_test_prc,
-                 r_test_n_leaves, r_test_max_depth, r_test_node_count) = \
-                    find_X_from_RF_train_test(data_chosen_new,NEW_data_testing, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
+                 r_test_n_leaves, r_test_max_depth, r_test_node_count,central_clf_size_after) = \
+                    find_X_from_RF_train_test(data_chosen_new,NEW_data_testing_after, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
 
                 dfAllPred.loc[len(dfAllPred)] = np.array(
-                    [db_name, str(f_number), str(un_class), str(NEW_data_testing.shape[0]), criterion_name,eval_result,str(before_quality_result),
+                    [db_name, str(f_number), str(un_class), str(NEW_data_testing_after.shape[0]), criterion_name,eval_result,str(before_quality_result),
                      r_test_criterion_base, str(r_test_acu_base),
                      str(r_test_precision_base), str(r_test_recall_base), str(r_test_f_measure_base), str(r_test_roc_base), str(r_test_prc_base),
                      str(r_test_n_leaves_base), str(r_test_max_depth_base), str(r_test_node_count_base),
@@ -1260,19 +1310,21 @@ for delete_used_f in [delete_used_choice]:
                      str(last_x_name), str(after_quality_result), str(r_test_criterion),str(r_test_acu),
                      str(r_test_precision), str(r_test_recall), str(r_test_f_measure),
                      str(r_test_roc), str(r_test_prc), str(r_test_n_leaves),
-                     str(r_test_max_depth), str(r_test_node_count),"ours - "+str(ensemble),"test"])
+                     str(r_test_max_depth), str(r_test_node_count),"ours - "+str(ensemble),"test",str(central_clf_size_before),str(sys.getsizeof(data_chosen)),
+                     str(sys.getsizeof(NEW_data_testing)),str(central_clf_size_after),str(sys.getsizeof(data_chosen_new[last_x_name])),
+                     str(sys.getsizeof(NEW_data_testing_after[last_x_name]))])
 
                 write_to_excel_dfAllPred()
 
 
-                arr_res = find_X_from_baseline_STree_train_test(data_chosen_new,NEW_data_testing, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
-                handle_baseline_results_STree(arr_res, NEW_data_testing, cur_depth, last_x_name, "test_new_f","after")
+                arr_res = find_X_from_baseline_STree_train_test(data_chosen_new,NEW_data_testing_after, last_x_name, y_names, criterion_function, None, number_of_trees_per_fold,cur_depth)
+                handle_baseline_results_STree(arr_res, NEW_data_testing_after, cur_depth, last_x_name, "test_new_f","after")
 
                 before_quality_result , before_criterion,before_acu_test, after_quality_result, criterion_after,acu_test, precision_before, recall_before, f_measure_before, roc_before, prc_before, n_leaves_before, max_depth_before, node_count_before, \
                 precision_after, recall_after, f_measure_after, roc_after, prc_after, n_leaves_after, max_depth_after, node_count_after = get_data_for_EXCEL()
 
                 dfAllPred.loc[len(dfAllPred)] = np.array(
-                    [db_name, str(f_number), str(un_class), str(NEW_data_testing.shape[0]), criterion_name,eval_result,
+                    [db_name, str(f_number), str(un_class), str(NEW_data_testing_after.shape[0]), criterion_name,eval_result,
                      str(before_quality_result),
                      before_criterion,str(before_acu_test),
                      str(precision_before), str(recall_before), str(f_measure_before), str(roc_before), str(prc_before),
@@ -1283,7 +1335,7 @@ for delete_used_f in [delete_used_choice]:
                      str(last_x_name), str(after_quality_result), str(criterion_after),str(acu_test),
                      str(precision_after), str(recall_after), str(f_measure_after),
                      str(roc_after), str(prc_after), str(n_leaves_after),
-                     str(max_depth_after), str(node_count_after), "oblique","test"])
+                     str(max_depth_after), str(node_count_after), "oblique","test","","","","","",""])
                 write_to_excel_dfAllPred()
 
 

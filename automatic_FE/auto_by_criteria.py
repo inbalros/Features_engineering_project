@@ -157,6 +157,21 @@ def criteria_max_depth_xgboost(booster):
     max_depth_all /= len(a)
     return max_depth_all
 
+def criteria_number_of_leaves_oblique(clf):
+    a = str(clf)
+    num_of_leafs = (a.count("Leaf"))
+    return num_of_leafs
+
+def criteria_number_of_nodes_oblique(clf):
+    a = str(clf)
+    num_of_nodes = (a.count("\n"))
+    return num_of_nodes
+
+def criteria_max_depth_oblique(clf):
+    a = str(clf)
+    max_depth = (max(list((w.count("-") for w in a.split("\n")))))
+    return max_depth
+
 #criteria_number_of_leaves_xgboost
 #criteria_number_of_nodes_xgboost
 #criteria_max_depth_xgboost
@@ -604,6 +619,13 @@ def find_X_from_RF(result_quality,ensemble,train,test, x_names,y_names,criteria_
         else:
             central_clf = XGBClassifier(max_depth=depth,n_estimators=number_of_trees).fit(train[x_names],
                                                           np.array(train[y_names]))
+    if ensemble == "OB":
+        if depth == None:
+            central_clf = Stree(max_depth=100000).fit(train[x_names],
+                                                           np.array(train[y_names]))
+        else:
+            central_clf = Stree(max_depth=depth).fit(train[x_names],
+                                                          np.array(train[y_names]))
 
     end_time = time.time()
     fit_time = end_time - start_time
@@ -699,7 +721,12 @@ def find_X_from_RF(result_quality,ensemble,train,test, x_names,y_names,criteria_
         max_depth_all = criteria_max_depth_xgboost(booster)
         node_count_all = criteria_number_of_nodes_xgboost(booster)
 
-
+    if ensemble == "OB":
+        criterion_trees = criteria_Function(central_clf)
+        n_leaves_all = criteria_number_of_leaves_oblique(central_clf)
+        max_depth_all = criteria_max_depth_oblique(central_clf)
+        node_count_all = criteria_number_of_nodes_oblique(central_clf)
+        size = sys.getsizeof(central_clf)
 
     return (np.array(list((result_quality_cur, criterion_trees,pred_acc,precision_all,recall_all,f_measure_all,roc_all,prc_all,n_leaves_all,max_depth_all,node_count_all))), central_clf,only_one)
 
@@ -807,7 +834,7 @@ def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,d
 #                              n_leaves_all, max_depth_all, node_count_all))), correct_trees)
 
         #print(X_names)
-        f.write("X_names "+ str(new_f_name) + " \n")
+        f.write("X_names "+  str(new_f_name) + " \n")
         if new_f_name == None:
             break
         rounds=rounds+1

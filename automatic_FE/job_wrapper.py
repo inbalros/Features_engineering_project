@@ -1345,7 +1345,9 @@ for delete_used_f in [delete_used_choice]:
                                                                   cur_depth)
                 handle_baseline_results_xgboost(arr_res, NEW_data_testing, cur_depth, last_x_name, "test_new_f")
                 '''
-            #if rounds>0:
-                #importance_experiment(db_name,f_number,un_class,criterion_name,delete_used_f,data_chosen,new_ds,added_f_names,last_x_name,X_names_ds,y_names,100,criterion_function)
 
+            if rounds>0:
+                importance_experiment(ensemble,eval_result,db_name,criterion_name,delete_used_f,
+                                      data_chosen,data_chosen_new,added_f_names,last_x_name,X_names_ds,y_names,1000)
+#importance_experiment();
 write_to_excel_dfAllPred(True)

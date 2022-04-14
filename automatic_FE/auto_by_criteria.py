@@ -767,7 +767,7 @@ def choose_best_feature(result_quality,ensemble,base_quality_results,base_criter
     return best_f
 
 
-def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_names_cur,features_unary_data,features_binary_data,depth,result_path,criteria_Function,delete_used_f=False):
+def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,data_cur,X_names_cur,y_names_cur,features_unary_data,features_binary_data,depth,result_path,criteria_Function,delete_used_f=False,feature_family = 'all'):
     #print(str(delete_used_f))
     global new_features_names
     global data
@@ -781,6 +781,35 @@ def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,d
     features_binary = features_binary_data.copy()
     global features_unary
     features_unary = features_unary_data.copy()
+
+    global operators_binary_direction_important_not_twice
+    global operators_binary_direction_important
+    global operators_binary_direction_NOT_important
+
+     # math, svc, all
+    if feature_family == "math":
+        operators_binary_direction_important_not_twice = [minus]
+        operators_binary_direction_important = [divide]
+        operators_binary_direction_NOT_important = [  multiplication,  plus]
+
+    elif feature_family == "svc":
+        operators_binary_direction_important_not_twice = []  # minus
+        operators_binary_direction_important = []  # divide
+        operators_binary_direction_NOT_important = [  # multiplication,   #plus
+            svc_binary_linear, svc_prediction_linear, svc_distance_linear,
+            svc_binary_poly, svc_prediction_poly, svc_distance_poly,
+            svc_binary_rbf, svc_prediction_rbf, svc_distance_rbf,
+            svc_binary_sigmoid, svc_prediction_sigmoid, svc_distance_sigmoid]
+
+    elif feature_family == "all":
+        operators_binary_direction_important_not_twice = [minus]  # minus
+        operators_binary_direction_important = [divide]  # divide
+        operators_binary_direction_NOT_important = [  multiplication, plus,
+            svc_binary_linear, svc_prediction_linear, svc_distance_linear,
+            svc_binary_poly, svc_prediction_poly, svc_distance_poly,
+            svc_binary_rbf, svc_prediction_rbf, svc_distance_rbf,
+            svc_binary_sigmoid, svc_prediction_sigmoid, svc_distance_sigmoid]
+
 
     basic_data = data_cur.copy()
     dic_new_features = {}
@@ -815,18 +844,18 @@ def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,d
     criterion_cur = base_criterion
     last_acu_test=base_acu_test
     last_quality_result=quality_result_base
-    f = open(result_path,"a")
-    f.write("data-set: \n")
-    f.write(str(delete_used_f)+ "\n")
-    f.write(str(quality_result_base)+" \n")
-    f.write(str(base_criterion)+" \n")
+    #f = open(result_path,"a")
+    #f.write("data-set: \n")
+    #f.write(str(delete_used_f)+ "\n")
+    #f.write(str(quality_result_base)+" \n")
+    #f.write(str(base_criterion)+" \n")
     rounds = 0
     last_criterion_cur=-1
     for num in range (5):
         create_new_features(features_unary,features_binary)
         new_features_names = list(dict.fromkeys(new_features_names))
         #print(new_features_names)
-        f.write("all new f: "+ str(new_features_names) + " \n")
+        #f.write("all new f: "+ str(new_features_names) + " \n")
         new_acc = max(quality_result_base,quality_result_test)  ######## what do you think about this?
         new_f_name,(quality_result_test,criterion_cur,acu_test, precision_cur, recall_cur, f_measure_cur, roc_cur, prc_cur,
                               n_leaves_cur, max_depth_cur, node_count_cur) = choose_best_feature(result_quality,ensemble,new_acc,criterion_cur,criteria_Function,depth,number_of_kFolds,number_of_trees_per_fold,delete_used_f)
@@ -834,7 +863,7 @@ def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,d
 #                              n_leaves_all, max_depth_all, node_count_all))), correct_trees)
 
         #print(X_names)
-        f.write("X_names "+  str(new_f_name) + " \n")
+        #f.write("X_names "+  str(new_f_name) + " \n")
         if new_f_name == None:
             break
         rounds=rounds+1
@@ -851,7 +880,7 @@ def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,d
         #features_binary.append(new_f_name)
         #features_binary = features_binary.append(new_f_name)
         #print(added_f_names)
-        f.write("added: "+ str(added_f_names)+" \n")
+        #f.write("added: "+ str(added_f_names)+" \n")
         #print(acu_test)
         #print(criterion_cur)
         last_quality_result = quality_result_test
@@ -867,9 +896,9 @@ def auto_F_E(result_quality,ensemble,number_of_kFolds,number_of_trees_per_fold,d
         max_depth_last =max_depth_cur
         node_count_last =node_count_cur
 
-        f.write(str(acu_test)+" \n")
-        f.write(str(criterion_cur)+" \n")
-    f.close()
+        #f.write(str(acu_test)+" \n")
+        #f.write(str(criterion_cur)+" \n")
+    #f.close()
 
     #def predict_kfold(data_cur, x_names,y_names,criteria_Function,f_name=None,number_of_trees=100,paramK=3,depth=None,use_baseline=False,check_features=False,delete_used_f=False):
     arr2, clf = \
@@ -897,11 +926,11 @@ features_unary=[]
 operators_binary_direction_important_not_twice= []  #minus
 operators_binary_direction_important= [] #divide
 #operators_binary_direction_important= []
-operators_binary_direction_NOT_important= [#multiplication,   #plus
-svc_binary_linear,svc_prediction_linear,svc_distance_linear,
-svc_binary_poly,svc_prediction_poly,svc_distance_poly,
-svc_binary_rbf,svc_prediction_rbf,svc_distance_rbf,
-svc_binary_sigmoid,svc_prediction_sigmoid,svc_distance_sigmoid]
+operators_binary_direction_NOT_important= [] #multiplication,   #plus
+#svc_binary_linear,svc_prediction_linear,svc_distance_linear,
+#svc_binary_poly,svc_prediction_poly,svc_distance_poly,
+#svc_binary_rbf,svc_prediction_rbf,svc_distance_rbf,
+#svc_binary_sigmoid,svc_prediction_sigmoid,svc_distance_sigmoid]
 #operators_binary_direction_NOT_important= [plus]
 operators_unary=[]
 
